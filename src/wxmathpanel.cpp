@@ -1,6 +1,8 @@
 #include "../include/wxmathpanel.h"
 #include <wx/dcbuffer.h>
 
+#define MATH_PANEL_TURN_ON_DOUBLE_BUFFERING
+
 // Default screen position borders
 // top left corner:     [- MATH_DEF_POSITION, MATH_DEF_POSITION]
 // bottom right corner: [MATH_DEF_POSITION, - MATH_DEF_POSITION]
@@ -135,6 +137,9 @@ wxMathPanel::wxMathPanel(wxWindow *parent,
     m_colour_axis = MATH_DEF_AXIS_COLOUR;
     m_colour_label = MATH_DEF_LABEL_COLOUR;
 
+    #ifdef MATH_PANEL_TURN_ON_DOUBLE_BUFFERING
+        this->SetBackgroundStyle(wxBG_STYLE_PAINT);
+    #endif // MATH_PANEL_TURN_ON_DOUBLE_BUFFERING
     this->Refresh();
 }
 
@@ -254,7 +259,13 @@ void wxMathPanel::EventMouseWheel(wxMouseEvent &event)
 // Add double buffering
 void wxMathPanel::EventPaint(wxPaintEvent &event)
 {
-    wxPaintDC dc(this);
+    #ifdef MATH_PANEL_TURN_ON_DOUBLE_BUFFERING
+        wxBufferedPaintDC dc(this);
+        dc.Clear();
+    #else
+        wxPaintDC dc(this);
+    #endif // MATH_PANEL_TURN_ON_DOUBLE_BUFFERING
+
     dc.SetTextForeground(m_colour_label);
 
     if(m_width<MATH_MIN_ACTUAL_SIZE || m_height<MATH_MIN_ACTUAL_SIZE)
@@ -853,9 +864,6 @@ void wxMathPanel::DrawNetworkLogVertical(wxDC &dc)
     double x, y1, y2;    // coordinates to draw
 
     int order = log10(m_border_left);
-
-    label_out<<order;
-    dc.DrawText(label_out, 100, 100);
 
     y1 = m_border_bottom;
     y2 = m_border_top;
