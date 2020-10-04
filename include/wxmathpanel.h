@@ -5,7 +5,6 @@
 #include <wx/dcclient.h>
 #include <math.h>
 #include <vector>
-#include <map>
 
 
 class wxMathPanel: public wxPanel
@@ -25,11 +24,11 @@ class wxMathPanel: public wxPanel
         void ZoomIn(void);
         void ZoomOut(void);
         void SetBorders(const double &left, const double &top, const double &right, const double &bottom);
-        void GetBorders(double *left, double *top, double *right, double *bottom) const;
+        void GetBorders(double &left, double &top, double &right, double &bottom) const;
 
         ///\name Restraints
         void SetRestraints(const double &left_border, const double &top_border, const double &right_border, const double &bottom_border);
-        void GetRestraints(double *left, double *top, double *right, double *bottom) const;
+        void GetRestraints(double &left_border, double &top_border, double &right_border, double &bottom_border) const;
         void ResetRestraints(void);
 
         ///\name Behavior
@@ -39,7 +38,7 @@ class wxMathPanel: public wxPanel
         bool GetMovable(void) const;
         void SetScalable(bool is_scalable = true);  // both axises
         void SetScalable(bool is_scalable_x, bool is_scalable_y);
-        void GetScalable(bool *is_scalable_x, bool *is_scalable_y) const;
+        void GetScalable(bool &is_scalable_x, bool &is_scalable_y) const;
 
         ///\name View
         void SetLogarithmic(bool x_axis, bool y_axis);
@@ -47,15 +46,15 @@ class wxMathPanel: public wxPanel
         void ShowNetLines(bool show_x, bool show_y);
         void ShowMiddleLines(bool show_x, bool show_y);
 
-        void GetIsLogarithmic(bool *x_axis, bool *y_axis) const;
-        void GetLabelsVisibility(bool *x_labels, bool *y_labels) const;
-        void GetNetLinesVisibility(bool *show_x, bool *show_y) const;
-        void GetMiddleLinesVisibility(bool *show_x, bool *show_y) const;
+        void GetIsLogarithmic(bool &x_axis, bool &y_axis) const;
+        void GetLabelsVisibility(bool &x_labels, bool &y_labels) const;
+        void GetNetLinesVisibility(bool &show_x, bool &show_y) const;
+        void GetMiddleLinesVisibility(bool &show_x, bool &show_y) const;
 
         ///\name Numeric values
         void SetBaseNumber(int base_number);    // for both axises
         void SetBaseNumber(int x_base_number, int y_base_number);
-        void GetBaseNumber(int *x_base_number, int *y_base_number) const;
+        void GetBaseNumber(int &x_base_number, int &y_base_number) const;
         void SetLogMinValue(double value);
         double GetLogMinValue() const;
 
@@ -69,7 +68,7 @@ class wxMathPanel: public wxPanel
 
         ///\name Text
         void SetAxisNames(wxString xname, wxString yname);
-        void GetAxisNames(wxString *xname, wxString *yname) const;
+        void GetAxisNames(wxString &xname, wxString &yname) const;
 
         ///\name Drawing
         // Mock for subclasses` after-drawing
@@ -87,17 +86,16 @@ class wxMathPanel: public wxPanel
         /// \}
 
     protected:
-
-
-    private:
-        // Events
+        // Events. Can be handled in subclasses
         void EventPaint(wxPaintEvent &event);
         void EventResize(wxSizeEvent &event);
         void EventMouseLeftButtonDown(wxMouseEvent &event);
         void EventMouseLeftButtonUp(wxMouseEvent &event);
         void EventMouseMove(wxMouseEvent &event);
         void EventMouseWheel(wxMouseEvent &event);
+        void EventMouseLeave(wxMouseEvent &event);
 
+    private:
         // Default drawing routines
         void DrawAxises(wxDC &dc);
         void DrawNetworkHorizontal(wxDC &dc);
@@ -114,17 +112,23 @@ class wxMathPanel: public wxPanel
         // Changes each time when the panel is being resized
         double m_height, m_width;
 
-        // Screen position
-        double m_border_left;
-        double m_border_right;
-        double m_border_top;
-        double m_border_bottom;
+        // Screen position (borders)
+        struct MathPanelBorders
+        {
+            double left;
+            double right;
+            double top;
+            double bottom;
+        } m_borders;
 
         // Screen restraints
         // The screen cannot be scaled or moved to border values out of restraints
-        struct BordersRestraints
+        struct MathPanelRestraints
         {
-            double left, right, top, bottom;
+            double left;
+            double right;
+            double top;
+            double bottom;
         } m_restraints;
 
         // View
@@ -149,7 +153,13 @@ class wxMathPanel: public wxPanel
         double m_x, m_y;                // mouse coordinates over panel
         double m_start_x, m_start_y;    // mouse coordinates on dragging start (when mouse left button has been pressed)
         bool m_is_movable;              // can screen be dragged by mouse
-        bool m_is_scalable, m_is_scalable_x, m_is_scalable_y;   // can screen be scaled by mouse wheel
+
+        struct MathPanelScalability
+        {
+            bool is_scalable_x;
+            bool is_scalable_y;
+        } m_scalable;
+
         bool m_is_dragging;             // true if mouse left button is clicked
 
         // Switching logarithmic <-> linear

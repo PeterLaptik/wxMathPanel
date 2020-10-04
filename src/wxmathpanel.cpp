@@ -99,17 +99,18 @@ wxMathPanel::wxMathPanel(wxWindow *parent,
     Bind(wxEVT_LEFT_UP, &wxMathPanel::EventMouseLeftButtonUp, this);
     Bind(wxEVT_MOUSEWHEEL, &wxMathPanel::EventMouseWheel, this);
     Bind(wxEVT_MOTION, &wxMathPanel::EventMouseMove, this);
+    Bind(wxEVT_LEAVE_WINDOW, &wxMathPanel::EventMouseLeave, this);
 
     // Canvas surface dimensions
-    m_border_left = m_last_left_border = -MATH_DEF_POSITION;
-    m_border_right = m_last_right_border = MATH_DEF_POSITION;
-    m_border_bottom = m_last_bottom_border = -MATH_DEF_POSITION;
-    m_border_top = m_last_top_border = MATH_DEF_POSITION;
+    m_borders.left = m_last_left_border = -MATH_DEF_POSITION;
+    m_borders.right = m_last_right_border = MATH_DEF_POSITION;
+    m_borders.bottom = m_last_bottom_border = -MATH_DEF_POSITION;
+    m_borders.top = m_last_top_border = MATH_DEF_POSITION;
 
     // Canvas state
     m_is_dragging = false;
     m_is_movable = MATH_DEFAULT_MOVABLE;
-    m_is_scalable = m_is_scalable_x = m_is_scalable_y = MATH_DEFAULT_SCALABLE;
+    m_scalable.is_scalable_x = m_scalable.is_scalable_y = MATH_DEFAULT_SCALABLE;
     m_is_x_logarithmic = m_is_y_logarithmic = MATH_DEFAULT_LOG_AXISES;
 
     // Default borders restraints
@@ -176,6 +177,12 @@ void wxMathPanel::EventMouseLeftButtonUp(wxMouseEvent &event)
     m_is_dragging = false;
 }
 
+// Stop dragging on mouse leaves panel
+void wxMathPanel::EventMouseLeave(wxMouseEvent &event)
+{
+    m_is_dragging = false;
+}
+
 // Drag screen if left a mouse button is being pressed
 void wxMathPanel::EventMouseMove(wxMouseEvent &event)
 {
@@ -192,50 +199,50 @@ void wxMathPanel::EventMouseMove(wxMouseEvent &event)
     dx = m_start_x - x;
     dy = m_start_y - y;
     dx /= m_width;
-    dx *= (m_border_right - m_border_left);
+    dx *= (m_borders.right - m_borders.left);
     dy /= m_height;
-    dy *= (m_border_top - m_border_bottom);
+    dy *= (m_borders.top - m_borders.bottom);
 
     if(!m_is_x_logarithmic) // logarithmic axises are unmovable
     {
-        m_border_left += dx;
-        m_border_right += dx;
+        m_borders.left += dx;
+        m_borders.right += dx;
         m_start_x = x;
 
         // Check restraints
-        if(m_restraints.left>m_border_left)
+        if(m_restraints.left>m_borders.left)
         {
-            dx = m_restraints.left - m_border_left;
-            m_border_left += dx;
-            m_border_right += dx;
+            dx = m_restraints.left - m_borders.left;
+            m_borders.left += dx;
+            m_borders.right += dx;
         }
 
-        if(m_restraints.right<m_border_right)
+        if(m_restraints.right<m_borders.right)
         {
-            dx = m_restraints.right - m_border_right;
-            m_border_left += dx;
-            m_border_right += dx;
+            dx = m_restraints.right - m_borders.right;
+            m_borders.left += dx;
+            m_borders.right += dx;
         }
     }
 
     if(!m_is_y_logarithmic) // logarithmic axises are unmovable
     {
-        m_border_top -= dy;
-        m_border_bottom -= dy;
+        m_borders.top -= dy;
+        m_borders.bottom -= dy;
         m_start_y = y;
 
-        if(m_restraints.top<m_border_top)
+        if(m_restraints.top<m_borders.top)
         {
-            dy = m_border_top - m_restraints.top;
-            m_border_top -= dy;
-            m_border_bottom -= dy;
+            dy = m_borders.top - m_restraints.top;
+            m_borders.top -= dy;
+            m_borders.bottom -= dy;
         }
 
-        if(m_restraints.bottom>m_border_bottom)
+        if(m_restraints.bottom>m_borders.bottom)
         {
-            dy = m_border_bottom - m_restraints.bottom;
-            m_border_top -= dy;
-            m_border_bottom -= dy;
+            dy = m_borders.bottom - m_restraints.bottom;
+            m_borders.top -= dy;
+            m_borders.bottom -= dy;
         }
     }
 
@@ -245,7 +252,7 @@ void wxMathPanel::EventMouseMove(wxMouseEvent &event)
 // Scale image on mouse wheel event
 void wxMathPanel::EventMouseWheel(wxMouseEvent &event)
 {
-    if(!m_is_scalable)
+    if((!m_scalable.is_scalable_x)&&(!m_scalable.is_scalable_y))
         return;
 
     if (event.GetWheelRotation()<0)
@@ -300,44 +307,44 @@ void wxMathPanel::CheckBorders(wxDC &dc)
     wxString label_start_y, label_end_y;
 
     // Exclude negative values for the logarithmic axises
-    if((m_is_x_logarithmic)&&(m_border_left<=0))
+    if((m_is_x_logarithmic)&&(m_borders.left<=0))
     {
-        deltaX = m_minimum_log_value - m_border_left;
-        m_border_left += deltaX;
-        m_border_right += deltaX;
+        deltaX = m_minimum_log_value - m_borders.left;
+        m_borders.left += deltaX;
+        m_borders.right += deltaX;
     }
 
-    if((m_is_y_logarithmic)&&(m_border_bottom<=0))
+    if((m_is_y_logarithmic)&&(m_borders.bottom<=0))
     {
-        deltaY = m_minimum_log_value - m_border_bottom;
-        m_border_bottom += deltaY;
-        m_border_top += deltaY;
+        deltaY = m_minimum_log_value - m_borders.bottom;
+        m_borders.bottom += deltaY;
+        m_borders.top += deltaY;
     }
 
     // Trying to zoom out the screen if the selected scale is too small
     int loop_flag = 0;
-    label_start_x<<m_border_left;
-    label_end_x<<m_border_right;
-    label_start_y<<m_border_bottom;
-    label_end_y<<m_border_top;
+    label_start_x<<m_borders.left;
+    label_end_x<<m_borders.right;
+    label_start_y<<m_borders.bottom;
+    label_end_y<<m_borders.top;
     while((label_start_x==label_end_x)||(label_start_y==label_end_y))
     {
-        deltaX = ((m_border_right - m_border_left)*SCALE_ZOOM_COEFF);
-        deltaX -= m_border_right - m_border_left;
+        deltaX = ((m_borders.right - m_borders.left)*SCALE_ZOOM_COEFF);
+        deltaX -= m_borders.right - m_borders.left;
         deltaX /= 2;
-        m_border_left -= deltaX;
-        m_border_right += deltaX;
+        m_borders.left -= deltaX;
+        m_borders.right += deltaX;
 
-        deltaY = ((m_border_top - m_border_bottom)*SCALE_ZOOM_COEFF);
-        deltaY -= m_border_top - m_border_bottom;
+        deltaY = ((m_borders.top - m_borders.bottom)*SCALE_ZOOM_COEFF);
+        deltaY -= m_borders.top - m_borders.bottom;
         deltaY /= 2;
-        m_border_top += deltaY;
-        m_border_bottom -= deltaY;
+        m_borders.top += deltaY;
+        m_borders.bottom -= deltaY;
 
-        label_start_x<<m_border_left;
-        label_end_x<<m_border_right;
-        label_start_y<<m_border_bottom;
-        label_end_y<<m_border_top;
+        label_start_x<<m_borders.left;
+        label_end_x<<m_borders.right;
+        label_start_y<<m_borders.bottom;
+        label_end_y<<m_borders.top;
 
         loop_flag++;
         if(loop_flag>=MAX_LOOP)
@@ -345,17 +352,17 @@ void wxMathPanel::CheckBorders(wxDC &dc)
     }
 
     // Check borders restraints
-    if(m_border_left<m_restraints.left)
-        m_border_left=m_restraints.left;
+    if(m_borders.left<m_restraints.left)
+        m_borders.left=m_restraints.left;
 
-    if(m_border_right>m_restraints.right)
-        m_border_right=m_restraints.right;
+    if(m_borders.right>m_restraints.right)
+        m_borders.right=m_restraints.right;
 
-    if(m_border_top>m_restraints.top)
-        m_border_top=m_restraints.top;
+    if(m_borders.top>m_restraints.top)
+        m_borders.top=m_restraints.top;
 
-    if(m_border_bottom<m_restraints.bottom)
-        m_border_bottom=m_restraints.bottom;
+    if(m_borders.bottom<m_restraints.bottom)
+        m_borders.bottom=m_restraints.bottom;
 }
 
 /**\brief Calculates real scale difference for the logarithmic X-axis that match to one-pixel step on the panel.
@@ -371,8 +378,8 @@ double wxMathPanel::GetLogStepFor(double x_point)
     TranslateXCoordinate(x1);
     x1++;
 
-    a = log10(m_border_left);
-    b = log10(m_border_right);
+    a = log10(m_borders.left);
+    b = log10(m_borders.right);
     c = a + x1/m_width*(b - a);
     x1 = pow(10, c);
 
@@ -400,12 +407,12 @@ void wxMathPanel::TranslateCoordinates(double &x, double &y)
 
     if (!m_is_x_logarithmic)
     {
-        x = m_width*(x - m_border_left)/(m_border_right - m_border_left);
+        x = m_width*(x - m_borders.left)/(m_borders.right - m_borders.left);
     }
     else if (x!=0)
     {
-        a = log10(m_border_left);
-        b = log10(m_border_right);
+        a = log10(m_borders.left);
+        b = log10(m_borders.right);
         c = log10(x);
         x = m_width*(c - a)/(b - a);
     }
@@ -413,16 +420,29 @@ void wxMathPanel::TranslateCoordinates(double &x, double &y)
 
     if (!m_is_y_logarithmic)
     {
-        y = m_height - m_height*(y - m_border_bottom)/(m_border_top - m_border_bottom);
+        y = m_height - m_height*(y - m_borders.bottom)/(m_borders.top - m_borders.bottom);
     }
     else if (y!=0)
     {
-        a = log10(m_border_bottom);
-        b = log10(m_border_top);
+        a = log10(m_borders.bottom);
+        b = log10(m_borders.top);
         c = log10(y);
         y = m_height - m_height*(c - a)/(b - a);
     }
     else { y = m_height /* bottom border */;}
+
+    // Prevent overflow on drawing
+    if(x<0)
+        x = -1;
+
+    if(x>m_width)
+        x = m_width + 1;
+
+    if(y<0)
+        y = -1;
+
+    if(y>m_height)
+        y = m_height + 1;
 }
 
 /**\brief Translates real x-coordinate to the coordinate on the panel
@@ -436,12 +456,12 @@ void wxMathPanel::TranslateXCoordinate(double &x)
 
     if (!m_is_x_logarithmic)
     {
-        x = m_width*(x - m_border_left)/(m_border_right - m_border_left);
+        x = m_width*(x - m_borders.left)/(m_borders.right - m_borders.left);
     }
     else if (x!=0)
         {
-            a = log10(m_border_left);
-            b = log10(m_border_right);
+            a = log10(m_borders.left);
+            b = log10(m_borders.right);
             c = log10(x);
             x = m_width*(c - a)/(b - a);
         }
@@ -459,12 +479,12 @@ void wxMathPanel::TranslateYCoordinate(double &y)
 
     if (!m_is_y_logarithmic)
     {
-        y = m_height - m_height*(y - m_border_bottom)/(m_border_top - m_border_bottom);
+        y = m_height - m_height*(y - m_borders.bottom)/(m_borders.top - m_borders.bottom);
     }
     else if (y!=0)
         {
-            a = log10(m_border_bottom);
-            b = log10(m_border_top);
+            a = log10(m_borders.bottom);
+            b = log10(m_borders.top);
             c = log10(y);
             y = m_height - m_height*(c - a)/(b - a);
         }
@@ -485,12 +505,12 @@ void wxMathPanel::DrawAxises(wxDC &dc)
     wxPoint hor_arrow[3];
 
     // Vertical axis
-    if((m_border_left<=0)&&(m_border_right>=0))
+    if((m_borders.left<=0)&&(m_borders.right>=0))
     {
         x_1 = 0;
         x_2 = 0;
-        y_1 = m_border_top;
-        y_2 = m_border_bottom;
+        y_1 = m_borders.top;
+        y_2 = m_borders.bottom;
         TranslateCoordinates(x_1, y_1);
         TranslateCoordinates(x_2, y_2);
         dc.SetBrush(*wxTRANSPARENT_BRUSH);
@@ -516,10 +536,10 @@ void wxMathPanel::DrawAxises(wxDC &dc)
     }
 
     // Horizontal axis
-    if((m_border_bottom<=0)&&(m_border_top>=0))
+    if((m_borders.bottom<=0)&&(m_borders.top>=0))
     {
-        x_1 = m_border_left;
-        x_2 = m_border_right;
+        x_1 = m_borders.left;
+        x_2 = m_borders.right;
         y_1 = 0;
         y_2 = 0;
         TranslateCoordinates(x_1, y_1);
@@ -566,20 +586,20 @@ void wxMathPanel::DrawAxises(wxDC &dc)
     if(y_1 - dc.GetTextExtent(MATH_ZERO_LABEL).GetHeight() < MATH_ARROW_WIDTH + MATH_FONT_MARGIN*2)
         return;
 
-    if(((m_border_left<=0)&&(m_border_right>=0))&&
-       ((m_border_bottom<=0)&&(m_border_top>=0)))
+    if(((m_borders.left<=0)&&(m_borders.right>=0))&&
+       ((m_borders.bottom<=0)&&(m_borders.top>=0)))
     {
         dc.DrawText(MATH_ZERO_LABEL,
                     x_1 + MATH_FONT_MARGIN,
                     y_1 - dc.GetFont().GetPixelSize().GetHeight() - MATH_FONT_MARGIN);
     }
-    else if((m_border_left>0)||(m_border_right<0))
+    else if((m_borders.left>0)||(m_borders.right<0))
     {
         dc.DrawText(MATH_ZERO_LABEL,
                     MATH_FONT_MARGIN,
                     y_1 - dc.GetFont().GetPixelSize().GetHeight() - MATH_FONT_MARGIN);
     }
-    else if((m_border_bottom>0)||(m_border_bottom<0))
+    else if((m_borders.bottom>0)||(m_borders.bottom<0))
     {
         dc.DrawText(MATH_ZERO_LABEL,
                     x_1 + MATH_FONT_MARGIN,
@@ -601,9 +621,9 @@ void wxMathPanel::DrawNetworkHorizontal(wxDC &dc)
 
     // Finding appropriate exponent for the screen size values
     int exponent = 0;
-    if(m_border_top - m_border_bottom>1)
+    if(m_borders.top - m_borders.bottom>1)
     {
-        while ((static_cast<int>(m_border_top - m_border_bottom))/static_cast<int>(pow(10,exponent))!=0)
+        while ((static_cast<int>(m_borders.top - m_borders.bottom))/static_cast<int>(pow(10,exponent))!=0)
         {
             ++exponent;
             if (exponent>MATH_MAX_EXPONENT)
@@ -613,7 +633,7 @@ void wxMathPanel::DrawNetworkHorizontal(wxDC &dc)
     }
     else
     {
-        while (((m_border_top - m_border_bottom))/pow(10,exponent)<1)
+        while (((m_borders.top - m_borders.bottom))/pow(10,exponent)<1)
         {
             --exponent;
             if (exponent<MATH_MIN_EXPONENT)
@@ -626,23 +646,23 @@ void wxMathPanel::DrawNetworkHorizontal(wxDC &dc)
     int base_number = m_base_number_vertical;
 
     // Expand network if current margin is too small
-    int middle_lines_margin = m_height/((m_border_top - m_border_bottom)/(base_number*pow(10, exponent-1)));  // height / number of lines
+    int middle_lines_margin = m_height/((m_borders.top - m_borders.bottom)/(base_number*pow(10, exponent-1)));  // height / number of lines
     while(middle_lines_margin<m_min_line_margin)
     {
         base_number *= 2;
-        middle_lines_margin = m_height/((m_border_top - m_border_bottom)/(base_number*pow(10, exponent-1)));
+        middle_lines_margin = m_height/((m_borders.top - m_borders.bottom)/(base_number*pow(10, exponent-1)));
     }
 
     // Number for incrementing (step value)
     double incrementor = base_number*pow(10, exponent-1);
     // Net lines start position
-    double start_y = static_cast<int>(m_border_bottom/incrementor)*incrementor;
+    double start_y = static_cast<int>(m_borders.bottom/incrementor)*incrementor;
 
     // Label and net-lines output
     int font_size = dc.GetFont().GetPixelSize().GetHeight();
     int font_shift = MATH_FONT_MARGIN + font_size;
 
-    while(start_y<m_border_top)
+    while(start_y<m_borders.top)
     {
         // Do not show zero
         if(fabs(start_y)<MATH_ZERO_NUMBER)
@@ -693,14 +713,14 @@ void wxMathPanel::DrawNetworkLogHorizontal(wxDC &dc)
     wxPen serif_pen(m_colour_axis);
     double x1, x2, y;
 
-    int order = log10(m_border_bottom);
+    int order = log10(m_borders.bottom);
 
-    x1 = m_border_left;
-    x2 = m_border_right;
+    x1 = m_borders.left;
+    x2 = m_borders.right;
     TranslateXCoordinate(x1);
     TranslateXCoordinate(x2);
 
-    while(pow(10, order)<m_border_top)
+    while(pow(10, order)<m_borders.top)
     {
         dc.SetPen(serif_pen);
         y = pow(10, order);
@@ -710,7 +730,7 @@ void wxMathPanel::DrawNetworkLogHorizontal(wxDC &dc)
             dc.DrawLine(x1, y, x2, y);
 
         label_height = dc.GetFont().GetPixelSize().GetHeight();
-        y = m_height - m_height*(order - log10(m_border_bottom))/(log10(m_border_top) - log10(m_border_bottom)); // label position
+        y = m_height - m_height*(order - log10(m_borders.bottom))/(log10(m_borders.top) - log10(m_borders.bottom)); // label position
         if((m_show_y_labels)&&(y > label_height + MATH_FONT_MARGIN))
         {
             // Mantissa output
@@ -733,7 +753,7 @@ void wxMathPanel::DrawNetworkLogHorizontal(wxDC &dc)
         dc.SetPen(line_pen);
         for (int i=1; i<10; ++i)
         {
-            if (pow(10, order) + (pow(10, order+1) - pow(10, order))/(10-1)*i>m_border_top)
+            if (pow(10, order) + (pow(10, order+1) - pow(10, order))/(10-1)*i>m_borders.top)
                 break;
 
             y = pow(10, order) + (pow(10, order+1) - pow(10, order))/(10-1)*i;
@@ -759,9 +779,9 @@ void wxMathPanel::DrawNetworkVertical(wxDC &dc)
 
     // Finding appropriate exponent for the screen size values
     int exponent = 0;
-    if(m_border_right - m_border_left>1)
+    if(m_borders.right - m_borders.left>1)
     {
-        while ((static_cast<int>(m_border_right - m_border_left))/static_cast<int>(pow(10,exponent))!=0)
+        while ((static_cast<int>(m_borders.right - m_borders.left))/static_cast<int>(pow(10,exponent))!=0)
         {
             ++exponent;
             if (exponent>MATH_MAX_EXPONENT)
@@ -771,7 +791,7 @@ void wxMathPanel::DrawNetworkVertical(wxDC &dc)
     }
     else
     {
-        while (((m_border_right - m_border_left))/pow(10,exponent)<1)
+        while (((m_borders.right - m_borders.left))/pow(10,exponent)<1)
         {
             --exponent;
             if (exponent<MATH_MIN_EXPONENT)
@@ -782,21 +802,20 @@ void wxMathPanel::DrawNetworkVertical(wxDC &dc)
     // Align network as per line number
     // Add or remove net lines
     int base_number = m_base_number_horizontal;
-    //int middle_lines_number = (m_border_right - m_border_left)/(base_number*pow(10, exponent-1));
 
     // Expand network if current margin is too small
-    int middle_lines_margin = m_width/((m_border_right - m_border_left)/(base_number*pow(10, exponent-1)));  // height / number of lines
+    int middle_lines_margin = m_width/((m_borders.right - m_borders.left)/(base_number*pow(10, exponent-1)));  // height / number of lines
     while(middle_lines_margin<m_min_line_margin)
     {
         base_number *= 2;
-        middle_lines_margin = m_width/((m_border_right - m_border_left)/(base_number*pow(10, exponent-1)));
+        middle_lines_margin = m_width/((m_borders.right - m_borders.left)/(base_number*pow(10, exponent-1)));
     }
 
     // Number for incrementing
     double incrementor = base_number*pow(10, exponent-1);
 
     // Net lines start position
-    double start_x = static_cast<int>(m_border_left/incrementor)*incrementor;
+    double start_x = static_cast<int>(m_borders.left/incrementor)*incrementor;
 
     // Right margin value
     int axis_label_width = dc.GetTextExtent(m_xname).GetWidth();
@@ -806,7 +825,7 @@ void wxMathPanel::DrawNetworkVertical(wxDC &dc)
     // Label and net-lines output
     int text_width;
     int font_shift;
-    while(start_x<m_border_right)
+    while(start_x<m_borders.right)
     {
         // Do not show zero
         if(fabs(start_x)<MATH_ZERO_NUMBER)
@@ -863,14 +882,14 @@ void wxMathPanel::DrawNetworkLogVertical(wxDC &dc)
     wxPen serif_pen(m_colour_axis);
     double x, y1, y2;    // coordinates to draw
 
-    int order = log10(m_border_left);
+    int order = log10(m_borders.left);
 
-    y1 = m_border_bottom;
-    y2 = m_border_top;
+    y1 = m_borders.bottom;
+    y2 = m_borders.top;
     TranslateYCoordinate(y1);
     TranslateYCoordinate(y2);
 
-    while(pow(10, order)<m_border_right)
+    while(pow(10, order)<m_borders.right)
     {
         dc.SetPen(serif_pen);
         x = pow(10, order);
@@ -881,7 +900,7 @@ void wxMathPanel::DrawNetworkLogVertical(wxDC &dc)
 
         label_out = MATH_DEC_LABEL;
         label_out<<order;
-        x = m_width*(order - log10(m_border_left))/(log10(m_border_right) - log10(m_border_left)); // label position
+        x = m_width*(order - log10(m_borders.left))/(log10(m_borders.right) - log10(m_borders.left)); // label position
         if((m_show_x_labels)
            &&(x + dc.GetTextExtent(label_out).GetWidth() + MATH_FONT_MARGIN < m_width - dc.GetTextExtent(m_xname).GetWidth()))
         {
@@ -905,7 +924,7 @@ void wxMathPanel::DrawNetworkLogVertical(wxDC &dc)
         dc.SetPen(line_pen);
         for (int i=1; i<10; ++i)
         {
-            if (pow(10, order) + (pow(10, order+1) - pow(10, order))/(10-1)*i>m_border_right)
+            if (pow(10, order) + (pow(10, order+1) - pow(10, order))/(10-1)*i>m_borders.right)
                 break;
 
             x = pow(10, order) + (pow(10, order+1) - pow(10, order))/(10-1)*i;
@@ -922,32 +941,32 @@ void wxMathPanel::ZoomIn()
     double deltaX;
     double deltaY;
 
-    if ((m_border_right - m_border_left>pow(10, MATH_MIN_EXPONENT))&&(m_is_scalable_x))
+    if ((m_borders.right - m_borders.left>pow(10, MATH_MIN_EXPONENT))&&(m_scalable.is_scalable_x))
     {
-        deltaX = ((m_border_right - m_border_left)/SCALE_ZOOM_COEFF);
-        deltaX -= m_border_right - m_border_left;
+        deltaX = ((m_borders.right - m_borders.left)/SCALE_ZOOM_COEFF);
+        deltaX -= m_borders.right - m_borders.left;
         deltaX /= 2;
-        m_border_left -= deltaX;
-        m_border_right += deltaX;
+        m_borders.left -= deltaX;
+        m_borders.right += deltaX;
         m_was_resized_x = true; // do not restore linear scale while is switched from the logarithmic
     }
 
-    if ((m_border_top - m_border_bottom>pow(10, MATH_MIN_EXPONENT))&&(m_is_scalable_y))
+    if ((m_borders.top - m_borders.bottom>pow(10, MATH_MIN_EXPONENT))&&(m_scalable.is_scalable_y))
     {
-        deltaY = ((m_border_top - m_border_bottom)/SCALE_ZOOM_COEFF);
-        deltaY -= m_border_top - m_border_bottom;
+        deltaY = ((m_borders.top - m_borders.bottom)/SCALE_ZOOM_COEFF);
+        deltaY -= m_borders.top - m_borders.bottom;
         deltaY /= 2;
-        m_border_top += deltaY;
-        m_border_bottom -= deltaY;
+        m_borders.top += deltaY;
+        m_borders.bottom -= deltaY;
         m_was_resized_y = true; // do not restore linear scale while is switched from the logarithmic
     }
 
     // Reset to zero for logarithmic axises
     if(m_is_x_logarithmic)
-        m_border_left = 0;
+        m_borders.left = 0;
 
     if(m_is_y_logarithmic)
-        m_border_bottom = 0;
+        m_borders.bottom = 0;
 
     this->Refresh();
 }
@@ -958,31 +977,31 @@ void wxMathPanel::ZoomOut()
     double deltaX;
     double deltaY;
 
-    if ((m_border_right - m_border_left<pow(10, MATH_MAX_EXPONENT))&&(m_is_scalable_x))
+    if ((m_borders.right - m_borders.left<pow(10, MATH_MAX_EXPONENT))&&(m_scalable.is_scalable_x))
     {
-        deltaX = ((m_border_right - m_border_left)*SCALE_ZOOM_COEFF);
-        deltaX -= m_border_right - m_border_left;
+        deltaX = ((m_borders.right - m_borders.left)*SCALE_ZOOM_COEFF);
+        deltaX -= m_borders.right - m_borders.left;
         deltaX /= 2;
 
-        if(!((m_is_x_logarithmic)&&(m_border_left-deltaX<=0)))
+        if(!((m_is_x_logarithmic)&&(m_borders.left-deltaX<=0)))
         {
-            m_border_left -= deltaX;
+            m_borders.left -= deltaX;
         }
-        m_border_right += deltaX;
+        m_borders.right += deltaX;
         m_was_resized_x = true; // do not restore linear scale while is switched from the logarithmic
     }
 
-    if ((m_border_top - m_border_bottom<pow(10,MATH_MAX_EXPONENT))&&(m_is_scalable_y))
+    if ((m_borders.top - m_borders.bottom<pow(10,MATH_MAX_EXPONENT))&&(m_scalable.is_scalable_y))
     {
-        deltaY = ((m_border_top - m_border_bottom)*SCALE_ZOOM_COEFF);
-        deltaY -= m_border_top - m_border_bottom;
+        deltaY = ((m_borders.top - m_borders.bottom)*SCALE_ZOOM_COEFF);
+        deltaY -= m_borders.top - m_borders.bottom;
         deltaY /= 2;
 
-        if(!((m_is_y_logarithmic)&&(m_border_bottom-deltaY<=0)))
+        if(!((m_is_y_logarithmic)&&(m_borders.bottom-deltaY<=0)))
         {
-            m_border_bottom -= deltaY;
+            m_borders.bottom -= deltaY;
         }
-        m_border_top += deltaY;
+        m_borders.top += deltaY;
         m_was_resized_y = true; // do not restore linear scale while is switched from the logarithmic
     }
 
@@ -1000,32 +1019,32 @@ void wxMathPanel::SetBorders(const double &left, const double &top, const double
     if((left>=right)||(bottom>=top))
         return;
 
-    m_border_left = left;
-    m_border_right = right;
-    m_border_bottom = bottom;
-    m_border_top = top;
+    m_borders.left = left;
+    m_borders.right = right;
+    m_borders.bottom = bottom;
+    m_borders.top = top;
 
     if(m_is_x_logarithmic)
-        m_border_left = m_minimum_log_value;
+        m_borders.left = m_minimum_log_value;
 
     if(m_is_y_logarithmic)
-        m_border_bottom = m_minimum_log_value;
+        m_borders.bottom = m_minimum_log_value;
 
     this->Refresh();
 }
 
 /**\brief Returns panel screen borders.
-* \param left Pointer for the left border value.
-* \param top Pointer for the top border value.
-* \param right Pointer for the right border value.
-* \param bottom Pointer for the bottom border value.
+* \param left Left border value to write.
+* \param top Top border value to write.
+* \param right Right border value to write.
+* \param bottom Bottom border value to write.
 */
-void wxMathPanel::GetBorders(double *left, double *top, double *right, double *bottom) const
+void wxMathPanel::GetBorders(double &left, double &top, double &right, double &bottom) const
 {
-    *left = m_border_left;
-    *right = m_border_right;
-    *top = m_border_top;
-    *bottom = m_border_bottom;
+    left = m_borders.left;
+    top = m_borders.top;
+    right = m_borders.right;
+    bottom = m_borders.bottom;
 }
 
 /**\brief Sets canvas restraints.
@@ -1050,19 +1069,18 @@ void wxMathPanel::SetRestraints(const double &left_border, const double &top_bor
     this->Refresh();
 }
 
-
 /**\brief Returns restraints values.
-* \param left Pointer for the left border value.
-* \param top Pointer for the top border value.
-* \param right Pointer for the right border value.
-* \param bottom Pointer for the bottom border value.
+* \param left_border Left border value to write.
+* \param top_border Top border value to write.
+* \param right_border Right border value to write.
+* \param bottom_border Bottom border value to write.
 */
-void wxMathPanel::GetRestraints(double *left, double *top, double *right, double *bottom) const
+void wxMathPanel::GetRestraints(double &left_border, double &top_border, double &right_border, double &bottom_border) const
 {
-    *left = m_restraints.left;
-    *right = m_restraints.right;
-    *top = m_restraints.top;
-    *bottom = m_restraints.bottom;
+    left_border = m_restraints.left;
+    top_border = m_restraints.left;
+    right_border = m_restraints.left;
+    bottom_border = m_restraints.left;
 }
 
 /**\brief  Resets restraints to default values. */
@@ -1078,7 +1096,7 @@ void wxMathPanel::ResetRestraints()
 */
 double wxMathPanel::GetLinearScaleX() const
 {
-    return (m_border_right - m_border_left)/m_width;
+    return (m_borders.right - m_borders.left)/m_width;
 }
 
 /**\brief Returns real scale for the Y-axis.
@@ -1086,17 +1104,17 @@ double wxMathPanel::GetLinearScaleX() const
 */
 double wxMathPanel::GetLinearScaleY() const
 {
-    return (m_border_top - m_border_bottom)/m_height;
+    return (m_borders.top - m_borders.bottom)/m_height;
 }
 
 /**\brief Returns axis types (logarithmic/linear).
-* \param x_axis Is X-axis logarithmic.
-* \param x_axis Is X-axis logarithmic.
+* \param x_axis Is X-axis logarithmic variable.
+* \param x_axis Is X-axis logarithmic variable.
 */
-void wxMathPanel::GetIsLogarithmic(bool *x_axis, bool *y_axis) const
+void wxMathPanel::GetIsLogarithmic(bool &x_axis, bool &y_axis) const
 {
-    *x_axis = m_is_x_logarithmic;
-    *y_axis = m_is_y_logarithmic;
+    x_axis = m_is_x_logarithmic;
+    y_axis = m_is_y_logarithmic;
 }
 
 /**\brief Changes multiplier for the net lines:
@@ -1136,10 +1154,10 @@ void wxMathPanel::SetBaseNumber(int x_base_number, int y_base_number)
 * \param x_base_number Pointer to the X base number.
 * \param y_base_number Pointer to the Y base number.
 */
-void wxMathPanel::GetBaseNumber(int *x_base_number, int *y_base_number) const
+void wxMathPanel::GetBaseNumber(int &x_base_number, int &y_base_number) const
 {
-    *x_base_number = m_base_number_horizontal;
-    *y_base_number = m_base_number_vertical;
+    x_base_number = m_base_number_horizontal;
+    y_base_number = m_base_number_vertical;
 }
 
 /**\brief Sets minimum value for the logarithmic axises.
@@ -1157,10 +1175,10 @@ void wxMathPanel::SetLogMinValue(double value)
     m_minimum_log_value = pow(10, exponent);
 
     if(m_is_x_logarithmic)
-        m_border_left = m_minimum_log_value;
+        m_borders.left = m_minimum_log_value;
 
     if(m_is_y_logarithmic)
-        m_border_bottom = m_minimum_log_value;
+        m_borders.bottom = m_minimum_log_value;
 
     this->Refresh();
 }
@@ -1179,14 +1197,14 @@ double wxMathPanel::GetLogMinValue() const
 */
 void wxMathPanel::Freeze()
 {
-    m_is_movable = m_is_scalable = false;
+    m_is_movable = m_scalable.is_scalable_x = m_scalable.is_scalable_y = false;
 }
 
 /**\brief Sets panel movable and scalable.
 */
 void wxMathPanel::UnFreeze()
 {
-    m_is_movable = m_is_scalable = true;
+    m_is_movable = m_scalable.is_scalable_x = m_scalable.is_scalable_y = true;
 }
 
 /**\brief Sets panel screen to be able to be dragging by mouse.
@@ -1211,7 +1229,7 @@ bool wxMathPanel::GetMovable() const
 */
 void wxMathPanel::SetScalable(bool is_scalable)
 {
-    m_is_scalable = is_scalable;
+    m_scalable.is_scalable_x = m_scalable.is_scalable_y = is_scalable;
 }
 
 /**\brief Sets panel screen to be able to be scaled by mouse wheel.
@@ -1220,18 +1238,18 @@ void wxMathPanel::SetScalable(bool is_scalable)
 */
 void wxMathPanel::SetScalable(bool is_scalable_x, bool is_scalable_y)
 {
-    m_is_scalable_x = is_scalable_x;
-    m_is_scalable_y = is_scalable_y;
+    m_scalable.is_scalable_x = is_scalable_x;
+    m_scalable.is_scalable_y = is_scalable_y;
 }
 
 /**\brief Returns panel ability to be scaled by mouse wheel.
-* \param  is_scalable_x Is panel scalable along X-axis.
-* \param  is_scalable_y Is panel scalable along Y-axis.
+* \param is_scalable_x Can panel screen be scaled along X-axis. Value to write.
+* \param is_scalable_y Can panel screen be scaled along Y-axis. Value to write.
 */
-void wxMathPanel::GetScalable(bool *is_scalable_x, bool *is_scalable_y) const
+void wxMathPanel::GetScalable(bool &is_scalable_x, bool &is_scalable_y) const
 {
-    *is_scalable_x =  m_is_scalable_x;
-    *is_scalable_y = m_is_scalable_y;
+    is_scalable_x = m_scalable.is_scalable_x;
+    is_scalable_y = m_scalable.is_scalable_y;
 }
 
 // View settings
@@ -1256,17 +1274,17 @@ void wxMathPanel::SetLogarithmicX(bool is_logarithmic)
     // Save last linear borders or restore them
     if(is_logarithmic)
     {
-        m_last_left_border = m_border_left;
-        m_last_right_border = m_border_right;
-        m_border_left = m_minimum_log_value;
+        m_last_left_border = m_borders.left;
+        m_last_right_border = m_borders.right;
+        m_borders.left = m_minimum_log_value;
         m_was_resized_x = false;
     }
     else
     {
-        m_border_left = m_last_left_border;
+        m_borders.left = m_last_left_border;
         if(!m_was_resized_x)    // restore if screen was not resized only
         {
-            m_border_right = m_last_right_border;
+            m_borders.right = m_last_right_border;
         }
     }
     this->Refresh();
@@ -1283,17 +1301,17 @@ void wxMathPanel::SetLogarithmicY(bool is_logarithmic)
     // Save last linear borders or restore them
     if(is_logarithmic)
     {
-        m_last_top_border = m_border_top;
-        m_last_bottom_border = m_border_bottom;
-        m_border_bottom = m_minimum_log_value;
+        m_last_top_border = m_borders.top;
+        m_last_bottom_border = m_borders.bottom;
+        m_borders.bottom = m_minimum_log_value;
         m_was_resized_y = false;
     }
     else
     {
-        m_border_bottom = m_last_bottom_border;
+        m_borders.bottom = m_last_bottom_border;
         if(!m_was_resized_y)    // restore if screen was not resized only
         {
-            m_border_top = m_last_top_border;
+            m_borders.top = m_last_top_border;
         }
     }
     this->Refresh();
@@ -1311,13 +1329,13 @@ void wxMathPanel::ShowNetLines(bool show_x, bool show_y)
 }
 
 /**\brief Returns network lines visibility.
-* \param show_x Pointer to visibility of horizontal lines.
-* \param show_y Pointer to visibility of vertical lines.
+* \param show_x Pointer to visibility of horizontal lines. Value to write.
+* \param show_y Pointer to visibility of vertical lines. Value to write.
 */
-void wxMathPanel::GetNetLinesVisibility(bool *show_x, bool *show_y) const
+void wxMathPanel::GetNetLinesVisibility(bool &show_x, bool &show_y) const
 {
-    *show_x = m_show_x_net_lines;
-    *show_y = m_show_y_net_lines;
+    show_x = m_show_x_net_lines;
+    show_y = m_show_y_net_lines;
 }
 
 /**\brief Sets visibility of middle lines for logarithmic axises.
@@ -1332,13 +1350,13 @@ void wxMathPanel::ShowMiddleLines(bool show_x, bool show_y)
 }
 
 /**\brief Returns middle lines visibility.
-* \param show_x Pointer to visibility of horizontal lines.
-* \aram show_y Pointer to visibility of vertical lines.
+* \param show_x Pointer to visibility of horizontal lines. Value to write.
+* \aram show_y Pointer to visibility of vertical lines. Value to write.
 */
-void wxMathPanel::GetMiddleLinesVisibility(bool *show_x, bool *show_y) const
+void wxMathPanel::GetMiddleLinesVisibility(bool &show_x, bool &show_y) const
 {
-    *show_x = m_show_x_middle_lines;
-    *show_y = m_show_y_middle_lines;
+    show_x = m_show_x_middle_lines;
+    show_y = m_show_y_middle_lines;
 }
 
 /**\brief Sets visibility of axises numeric labels.
@@ -1353,13 +1371,13 @@ void wxMathPanel::ShowLabels(bool x_labels, bool y_labels)
 }
 
 /**\brief Returns axises labels visibility.
-* \param x_labels Pointer to visibility of values for X-axis.
-* \param y_labels Pointer to visibility of values for Y-axis.
+* \param x_labels Pointer to visibility of values for X-axis. Value to write.
+* \param y_labels Pointer to visibility of values for Y-axis. Value to write.
 */
-void wxMathPanel::GetLabelsVisibility(bool *x_labels, bool *y_labels) const
+void wxMathPanel::GetLabelsVisibility(bool &x_labels, bool &y_labels) const
 {
-    *x_labels = m_show_x_labels;
-    *y_labels = m_show_y_labels;
+    x_labels = m_show_x_labels;
+    y_labels = m_show_y_labels;
 }
 
 /**\brief Sets axises names.
@@ -1374,13 +1392,13 @@ void wxMathPanel::SetAxisNames(wxString xname, wxString yname)
 }
 
 /**\brief Returns axises names.
-* \param xname Pointer to name for X-axis.
-* \param yname Pointer to name for Y-axis.
+* \param xname Pointer to name for X-axis. Value to write.
+* \param yname Pointer to name for Y-axis. Value to write.
 */
-void wxMathPanel::GetAxisNames(wxString *xname, wxString *yname) const
+void wxMathPanel::GetAxisNames(wxString &xname, wxString &yname) const
 {
-    *xname = m_xname;
-    *yname = m_yname;
+    xname = m_xname;
+    yname = m_yname;
 }
 
 /**\brief Sets main axises colour.
