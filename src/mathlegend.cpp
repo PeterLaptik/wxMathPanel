@@ -5,6 +5,7 @@ static const int L_DEFAULT_SIZE = 20;
 static const int L_BORDER_MARGIN = 10;
 static const int L_TEXT_MARGIN = 5;
 static const int L_LINE_MARGIN = 5;
+static const int L_DEFAULT_LABEL_SIZE = 8;
 
 // Default colours
 static const wxColor DEFAULT_BACKGROUND_COLOUR = *wxWHITE;
@@ -16,9 +17,11 @@ static const int DEFAULT_SHADOW_THICKNESS = 3;
 static const int L_LINE_LENGTH = 50;
 
 
-MathLegend::MathLegend(std::vector<IDrawableFunction*> *functions)
+/** \brief Constructor for wxMathPanelGraph legend.
+* \param functions Functions list.
+*/
+MathLegend::MathLegend()
 {
-    m_functions = functions;
     m_metrics.x = m_metrics.y = 0;
     m_metrics.height = m_metrics.width = L_DEFAULT_SIZE;
     m_colours.background = DEFAULT_BACKGROUND_COLOUR;
@@ -31,6 +34,30 @@ MathLegend::MathLegend(std::vector<IDrawableFunction*> *functions)
 MathLegend::~MathLegend()
 { }
 
+
+/** \brief Append item into the legend.
+*
+* Output order depends on appending sequence.
+* \param num Item number.
+* \param name Item name.
+* \param colour Item colour.
+* \param ltype Point label type.
+*/
+void MathLegend::AppendItem(wxString name, wxColour colour, PointLabelType ltype)
+{
+    int num = m_item_names.size();
+    m_item_names.push_back(name);
+    m_item_colours.insert(std::pair<int, wxColour>(num, colour));
+    m_item_labels.insert(std::pair<int, PointLabelType>(num, ltype));
+}
+
+/**\brief Clear legend items. */
+void MathLegend::ClearItems()
+{
+    m_item_names.clear();
+    m_item_colours.clear();
+    m_item_labels.clear();
+}
 
 /**\brief Sets the legend position.
 *
@@ -170,7 +197,7 @@ bool MathLegend::HasShadow() const
 */
 void MathLegend::Refresh(wxDC &dc)
 {
-    if((m_functions->size()<1)||(!m_is_visible))
+    if((m_item_names.empty())||(!m_is_visible))
         return;
 
     m_metrics.width = GetMaxWidth(dc);
@@ -205,17 +232,25 @@ void MathLegend::Refresh(wxDC &dc)
     int text_height = dc.GetFont().GetPixelSize().GetHeight();
     int pos = text_height/2 + L_LINE_MARGIN;
     int step_size = text_height + L_LINE_MARGIN;
-
-    for(std::vector<IDrawableFunction*>::iterator it=m_functions->begin(); it!=m_functions->end(); ++it)
+    int value_counter = 0;
+    for(std::vector<wxString>::iterator it=m_item_names.begin(); it!=m_item_names.end(); ++it)
     {
         // Function name
-        text = (*it)->GetName();
-        dc.DrawText(text, m_metrics.x + L_BORDER_MARGIN + L_LINE_LENGTH + L_TEXT_MARGIN, m_metrics.y + pos - text_height/2 - L_LINE_MARGIN/2);
+//        text = (*it)->GetName();
+        dc.DrawText((*it), m_metrics.x + L_BORDER_MARGIN + L_LINE_LENGTH + L_TEXT_MARGIN, m_metrics.y + pos - text_height/2 - L_LINE_MARGIN/2);
         // Function line
-        colour = (*it)->GetColour();
+        colour = m_item_colours.find(value_counter)->second;
         pen.SetColour(colour);
         dc.SetPen(pen);
+        dc.SetBrush(wxBrush(colour));
         dc.DrawLine(m_metrics.x + L_BORDER_MARGIN, m_metrics.y + pos, m_metrics.x + L_BORDER_MARGIN + L_LINE_LENGTH, m_metrics.y + pos);
+        // Draw point label
+        PointLabel *label = GetPointLabelObject(m_item_labels.find(value_counter++)->second);
+        if(label!=NULL)
+        {
+            label->Draw(dc, m_metrics.x + L_BORDER_MARGIN + L_LINE_LENGTH/2, m_metrics.y + pos);
+            delete label;
+        }
         pos += step_size;
     }
 }
@@ -229,12 +264,12 @@ int MathLegend::GetMaxWidth(const wxDC &dc) const
     int text_length = 0;
     int text_max_length = 0;
 
-    if(m_functions->size()<1)
+    if(m_item_names.size()<1)
         return 0;
 
-    for(std::vector<IDrawableFunction*>::const_iterator it=m_functions->begin(); it!=m_functions->end(); ++it)
+    for(std::vector<wxString>::const_iterator it=m_item_names.begin(); it!=m_item_names.end(); ++it)
     {
-        text_length = dc.GetTextExtent((*it)->GetName()).GetWidth();
+        text_length = dc.GetTextExtent(*it).GetWidth();
         if(text_length>text_max_length)
             text_max_length = text_length;
     }
@@ -244,17 +279,39 @@ int MathLegend::GetMaxWidth(const wxDC &dc) const
 // Get maximum height of the legend according to text height
 int MathLegend::GetMaxHeight(const wxDC &dc) const
 {
-    if(m_functions->size()<1)
+    if(m_item_names.size()<1)
         return 0;
 
     int text_height = dc.GetFont().GetPixelSize().GetHeight();
     int pos = text_height/2 + L_LINE_MARGIN;
     int step_size = text_height + L_LINE_MARGIN;
 
-    for(std::vector<IDrawableFunction*>::const_iterator it=m_functions->begin(); it!=m_functions->end(); ++it)
+    for(std::vector<wxString>::const_iterator it=m_item_names.begin(); it!=m_item_names.end(); ++it)
     {
         pos += step_size;
     }
     return pos - step_size + text_height/2 + L_LINE_MARGIN;
 }
 
+
+PointLabel* MathLegend::GetPointLabelObject(PointLabelType ptype)
+{
+    PointLabel* label = NULL;
+
+    switch(ptype)
+        {
+            case POINT_TYPE_CIRCLE:
+                label = new PointLabelCircle(L_DEFAULT_LABEL_SIZE);
+                break;
+            case POINT_TYPE_SQUARE:
+                label = new PointLabelSquare(L_DEFAULT_LABEL_SIZE);
+                break;
+            case POINT_TYPE_TRIANGLE:
+                label = new PointLabelTriangle(L_DEFAULT_LABEL_SIZE);
+                break;
+            case POINT_TYPE_CROSS:
+                label = new PointLabelCross(L_DEFAULT_LABEL_SIZE);
+                break;
+        }
+    return label;
+}

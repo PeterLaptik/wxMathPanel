@@ -3,7 +3,7 @@
 static const int DEFAULT_CURVE_THICKNESS = 2;
 static const int MAXIMUM_CURVE_THICKNESS = 5;
 
-// Default value used as template to decrease quality for higher perfomance
+// Default value used as template to decrease quality for higher performance
 static const int wxMATHPANEL_TEMPLATE_WIDTH = 640;
 
 
@@ -27,7 +27,7 @@ wxMathPanelGraph::wxMathPanelGraph(wxWindow *parent,
     Bind(wxEVT_MOTION, &wxMathPanelGraph::EventMouseMove, this);
     Bind(wxEVT_LEAVE_WINDOW, &wxMathPanelGraph::EventMouseLeave, this);
     Bind(wxEVT_SIZE, &wxMathPanelGraph::EventResize, this);
-    m_legend = new MathLegend(&m_functions);
+    m_legend = new MathLegend();
     m_is_legend_dragging = false;
     m_thickness = DEFAULT_CURVE_THICKNESS;
     m_quality = false;
@@ -48,6 +48,7 @@ wxMathPanelGraph::~wxMathPanelGraph()
 void wxMathPanelGraph::AddFunction(IDrawableFunction *f)
 {
     m_functions.push_back(f);
+    m_legend->AppendItem(f->GetName(), f->GetColour(), POINT_TYPE_NOLABEL);
     this->Refresh();
 }
 
@@ -55,7 +56,8 @@ void wxMathPanelGraph::AddFunction(IDrawableFunction *f)
 */
 void wxMathPanelGraph::ClearFunctions()
 {
-    m_functions.clear();
+    m_functions.erase(m_functions.begin(), m_functions.end());
+    m_legend->ClearItems();
     this->Refresh();
 }
 
@@ -112,7 +114,7 @@ void wxMathPanelGraph::DrawFunctions(wxDC &dc)
     double border_left, border_right, border_top, border_bottom;
     bool is_logarithmic_x, is_logarithmic_y;
 
-    if(m_functions.size()<1)
+    if(m_functions.empty())
         return; // no functions to draw
 
     int INCREMENTOR = 1;    // value that increments steps during curve drawing
@@ -124,6 +126,9 @@ void wxMathPanelGraph::DrawFunctions(wxDC &dc)
                         dc_width/wxMATHPANEL_TEMPLATE_WIDTH*(m_functions.size()/2)
                         : m_functions.size()/2;
     }
+
+    if(INCREMENTOR<1)
+        INCREMENTOR = 1;
 
     // Get canvas metrics
     GetBorders(border_left, border_top, border_right, border_bottom);

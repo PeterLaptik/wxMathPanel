@@ -2,18 +2,23 @@
 #define MATHLEGEND_H
 
 #include "ifunction.h"
+#include "ipointset.h"
+#include "pointlabel.h"
 #include <wx/dcclient.h>
-#include <vector>
+#include <map>
 
 
 /**\brief Simple self-drawing legend */
 class MathLegend
 {
     public:
-        MathLegend(std::vector<IDrawableFunction*> *functions);
+        MathLegend();
         virtual ~MathLegend();
 
-        virtual void Refresh(wxDC &dc);
+        void AppendItem(wxString name, wxColour colour, PointLabelType ltype);
+        void ClearItems(void);
+
+        void Refresh(wxDC &dc);
 
         void SetPosition(int x, int y);
         void GetMetrics(int &pos_x, int &pos_y, int &width, int &height) const;
@@ -33,16 +38,23 @@ class MathLegend
         void SetShadow(bool shadow = true);
         bool HasShadow(void) const;
 
+
     protected:
-        // Scaling computing
-        virtual int GetMaxWidth(const wxDC &dc) const;
-        virtual int GetMaxHeight(const wxDC &dc) const;
+
 
     private:
+        // Scaling computing
+        inline int GetMaxWidth(const wxDC &dc) const;
+        inline int GetMaxHeight(const wxDC &dc) const;
+        inline PointLabel* GetPointLabelObject(PointLabelType ptype);
+
         bool m_is_visible;
         bool m_is_movable;
         bool m_has_shadow;
-        std::vector<IDrawableFunction*> *m_functions;   // functions to draw
+
+        std::vector<wxString> m_item_names;
+        std::map<int, wxColour> m_item_colours;
+        std::map<int, PointLabelType> m_item_labels;
 
         struct LegendMetrics
         {
