@@ -1,5 +1,4 @@
 #include "../include/wxmathpanelpointgraph.h"
-#include <wx/msgdlg.h>
 
 static const int DEFAULT_CURVE_THICKNESS = 2;
 static const int MAXIMUM_CURVE_THICKNESS = 5;

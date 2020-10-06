@@ -191,7 +191,7 @@ bool MathLegend::HasShadow() const
 {
     return m_has_shadow;
 }
-#include <wx/msgdlg.h>
+
 /**\brief Draws legend.
 * \param dc Device context for painting.
 */
