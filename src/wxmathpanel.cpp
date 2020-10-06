@@ -54,6 +54,9 @@ static const int MATH_FONT_MARGIN = 2;
 // Margin between exponent and mantissa for logarithmic axis labels
 static const int MATH_FONT_EXP_MARGIN = 2;
 
+// Default value for out-of-canvas coordinates
+static const int MATH_OUT_OF_CANVAS_VALUE = 20;
+
 // Label vertical shift
 static const int MATH_LABEL_SHIFT = 20;
 static const wxString MATH_X_NAME = wxT("x");
@@ -426,23 +429,30 @@ void wxMathPanel::TranslateCoordinates(double &x, double &y)
     {
         a = log10(m_borders.bottom);
         b = log10(m_borders.top);
-        c = log10(y);
-        y = m_height - m_height*(c - a)/(b - a);
+        if(y<=0)
+        {
+            y = m_height + MATH_OUT_OF_CANVAS_VALUE;
+        }
+        else
+        {
+            c = log10(y);
+            y = m_height - m_height*(c - a)/(b - a);
+        }
     }
     else { y = m_height /* bottom border */;}
 
-    // Prevent overflow on drawing
+    // Prevent overflows on drawing
     if(x<0)
-        x = -1;
+        x = - MATH_OUT_OF_CANVAS_VALUE;
 
     if(x>m_width)
-        x = m_width + 1;
+        x = m_width + MATH_OUT_OF_CANVAS_VALUE;
 
     if(y<0)
-        y = -1;
+        y = - MATH_OUT_OF_CANVAS_VALUE;
 
     if(y>m_height)
-        y = m_height + 1;
+        y = m_height + MATH_OUT_OF_CANVAS_VALUE;
 }
 
 /**\brief Translates real x-coordinate to the coordinate on the panel
