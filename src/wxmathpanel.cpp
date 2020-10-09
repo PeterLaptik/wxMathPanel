@@ -3,6 +3,9 @@
 
 #define MATH_PANEL_TURN_ON_DOUBLE_BUFFERING
 
+wxDEFINE_EVENT(wxMATHPANEL_MOUSE_MOVE, MouseMoveEvent);
+
+
 // Default screen position borders
 // top left corner:     [- MATH_DEF_POSITION, MATH_DEF_POSITION]
 // bottom right corner: [MATH_DEF_POSITION, - MATH_DEF_POSITION]
@@ -45,11 +48,12 @@ static const int MATH_ARROW_WIDTH = 5;
 // Arrow lines margin
 // Distance from panel borders to axises
 // when the axises are drawn at the edge of a panel
-static const int MATH_AXIS_MARGIN_H = 1;
+static const int MATH_AXIS_MARGIN_H = 2;
 static const int MATH_AXIS_MARGIN_V = 0;
 
-// Font-axis / font-line margin
+// Font-axis / font-line / font-frame margin
 static const int MATH_FONT_MARGIN = 2;
+static const int MATH_FONT_FRAME_MARGIN = 4;
 
 // Margin between exponent and mantissa for logarithmic axis labels
 static const int MATH_FONT_EXP_MARGIN = 2;
@@ -71,6 +75,7 @@ static const wxColour MATH_DEF_CURVE_COLOUR = *wxBLACK;
 static const wxColour MATH_DEF_LABEL_COLOUR = *wxBLACK;
 
 // Default view and behavior
+static const bool MATH_DEFAULT_FRAMED = true;
 static const bool MATH_DEFAULT_VISIBLE_NETWORK_LINES = true;
 static const bool MATH_DEFAULT_VISIBLE_NETWORK_LABLES = true;
 static const bool MATH_DEFAULT_LOG_AXISES = false;
@@ -109,8 +114,10 @@ wxMathPanel::wxMathPanel(wxWindow *parent,
     m_borders.right = m_last_right_border = MATH_DEF_POSITION;
     m_borders.bottom = m_last_bottom_border = -MATH_DEF_POSITION;
     m_borders.top = m_last_top_border = MATH_DEF_POSITION;
+    mouse_x = mouse_y = 0;
 
     // Canvas state
+    m_is_framed = MATH_DEFAULT_FRAMED;
     m_is_dragging = false;
     m_is_movable = MATH_DEFAULT_MOVABLE;
     m_scalable.is_scalable_x = m_scalable.is_scalable_y = MATH_DEFAULT_SCALABLE;
@@ -190,14 +197,22 @@ void wxMathPanel::EventMouseLeave(wxMouseEvent &event)
 void wxMathPanel::EventMouseMove(wxMouseEvent &event)
 {
     double dx, dy;
+    double real_x, real_y;
     int x, y;
+
+    // Get real coordinates that match to the mouse pointer
+    x = m_x = real_x = event.GetX();
+    y = m_y = real_y = event.GetY();
+
+    // Send event MouseMoveEvent
+    MouseMoveEvent mouse_event(wxMATHPANEL_MOUSE_MOVE, this->GetId());
+    ReverseTranslateCoordinates(real_x, real_y);
+    mouse_event.X = real_x;
+    mouse_event.Y = real_y;
+    wxPostEvent(this, mouse_event);
 
     if((!m_is_dragging)||(!m_is_movable))
         return;
-
-    x = m_x = event.GetX();
-    y = m_y = event.GetY();
-    TranslateCoordinates(m_x, m_y);
 
     dx = m_start_x - x;
     dy = m_start_y - y;
@@ -265,8 +280,6 @@ void wxMathPanel::EventMouseWheel(wxMouseEvent &event)
         ZoomIn();
 }
 
-// TODO
-// Add double buffering
 void wxMathPanel::EventPaint(wxPaintEvent &event)
 {
     #ifdef MATH_PANEL_TURN_ON_DOUBLE_BUFFERING
@@ -453,6 +466,12 @@ void wxMathPanel::TranslateCoordinates(double &x, double &y)
 
     if(y>m_height)
         y = m_height + MATH_OUT_OF_CANVAS_VALUE;
+
+    if(m_is_framed)
+    {
+        x += m_borders.frame_left;
+        y -= m_borders.frame_bottom;
+    }
 }
 
 /**\brief Translates real x-coordinate to the coordinate on the panel
@@ -476,6 +495,16 @@ void wxMathPanel::TranslateXCoordinate(double &x)
             x = m_width*(c - a)/(b - a);
         }
     else {x = 0;}
+
+    // Prevent overflows on drawing
+    if(x<0)
+        x = - MATH_OUT_OF_CANVAS_VALUE;
+
+    if(x>m_width)
+        x = m_width + MATH_OUT_OF_CANVAS_VALUE;
+
+    if(m_is_framed)
+        x += m_borders.frame_left;
 }
 
 /**\brief Translates real y-coordinate to the coordinate on the panel
@@ -499,6 +528,94 @@ void wxMathPanel::TranslateYCoordinate(double &y)
             y = m_height - m_height*(c - a)/(b - a);
         }
     else { y = m_height /* bottom border */;}
+
+    if(y<0)
+        y = - MATH_OUT_OF_CANVAS_VALUE;
+
+    if(y>m_height)
+        y = m_height + MATH_OUT_OF_CANVAS_VALUE;
+
+    if(m_is_framed)
+        y -= m_borders.frame_bottom;
+}
+
+void wxMathPanel::ReverseTranslateCoordinates(double &x, double &y)
+{
+    double a, b;    // logarithmic borders
+    double c;       // logarithmic position
+
+    if(m_is_framed)
+    {
+        x -= m_borders.frame_left;
+        y += m_borders.frame_bottom;
+    }
+
+    double left = m_borders.left;
+    double right = m_borders.right;
+    double top = m_borders.top;
+    double bottom = m_borders.bottom;
+
+    if (!m_is_x_logarithmic)
+    {
+        x = left + (right - left)/(m_width)*x;
+
+    }
+    else
+    {
+        a = log10(left);
+        b = log10(right);
+        c = a + x/m_width*(b - a);
+        x = pow(10, c);
+    }
+
+    if (!m_is_y_logarithmic)
+    {
+        y = top - (top - bottom)/m_height*y;
+    }
+    else
+    {
+        a = log10(bottom);
+        b = log10(top);
+        c = a + (m_height - y)/m_height*(b - a);
+        y = pow(10, c);
+    }
+}
+
+// Assign frame sizes for linear scales
+void wxMathPanel::AssignFrames(wxDC &dc, int start, int step)
+{
+    int result = 0;
+    int text_size;
+    wxString label_val;
+
+    if(!m_is_framed)
+    {
+        m_borders.frame_bottom = m_borders.frame_left = 0;
+        return;
+    }
+
+    while(start<m_borders.top)
+    {
+        label_val.Clear();
+        label_val<<start;
+        text_size = dc.GetTextExtent(label_val).GetWidth();
+        if(result<text_size)
+            result = text_size;
+
+        start += step;
+    }
+
+    m_borders.frame_left = result + MATH_FONT_FRAME_MARGIN;
+    m_borders.frame_bottom = dc.GetFont().GetPixelSize().GetHeight() + MATH_FONT_FRAME_MARGIN;
+}
+
+// Assign frames for logarithmic scales
+void wxMathPanel::AssignFrames(wxDC &dc)
+{
+    wxString txt = MATH_DEC_LABEL;
+    txt<<round(log10(m_borders.right));
+    m_borders.frame_left = dc.GetTextExtent(txt).GetWidth() + MATH_FONT_FRAME_MARGIN;
+    m_borders.frame_bottom = dc.GetFont().GetPixelSize().GetHeight() + MATH_FONT_FRAME_MARGIN;
 }
 
 // Draws axises O-x, O-y
@@ -515,6 +632,9 @@ void wxMathPanel::DrawAxises(wxDC &dc)
     wxPoint hor_arrow[3];
 
     // Vertical axis
+    x_1 = m_borders.right;
+    y_1 = 0;
+    ReverseTranslateCoordinates(x_1, y_1);
     if((m_borders.left<=0)&&(m_borders.right>=0))
     {
         x_1 = 0;
@@ -526,7 +646,7 @@ void wxMathPanel::DrawAxises(wxDC &dc)
         dc.SetBrush(*wxTRANSPARENT_BRUSH);
         dc.DrawLine(x_1, y_1, x_2, y_2);
         // Draw arrow
-        vert_arrow[0] = wxPoint(x_1, y_1);
+        vert_arrow[0] = wxPoint(x_1, 0);
         vert_arrow[1] = wxPoint(x_1 - MATH_ARROW_WIDTH/2, MATH_ARROW_LENGTH);
         vert_arrow[2] = wxPoint(x_1 + MATH_ARROW_WIDTH/2, MATH_ARROW_LENGTH);
         dc.SetBrush(brush);
@@ -536,10 +656,15 @@ void wxMathPanel::DrawAxises(wxDC &dc)
     else
     {
         // Axis is out of screen
-        dc.DrawLine(0 + MATH_AXIS_MARGIN_V, 0, 0 + MATH_AXIS_MARGIN_V, m_width);
-        vert_arrow[0] = wxPoint(0 + MATH_AXIS_MARGIN_V, 0);
-        vert_arrow[1] = wxPoint(MATH_ARROW_WIDTH/2 + MATH_AXIS_MARGIN_V, MATH_ARROW_LENGTH);
-        vert_arrow[2] = wxPoint(0 + MATH_AXIS_MARGIN_V, MATH_ARROW_LENGTH);
+        x_1 = x_2 = m_borders.left;
+        y_1 = m_borders.top;
+        y_2 = m_borders.bottom;
+        TranslateCoordinates(x_1, y_1);
+        TranslateCoordinates(x_2, y_2);
+        dc.DrawLine(x_1 + MATH_AXIS_MARGIN_V, y_1, x_1 + MATH_AXIS_MARGIN_V, y_2);
+        vert_arrow[0] = wxPoint(x_1 + MATH_AXIS_MARGIN_V, 0);
+        vert_arrow[1] = wxPoint(x_1 - MATH_ARROW_WIDTH/2 + MATH_AXIS_MARGIN_V, MATH_ARROW_LENGTH);
+        vert_arrow[2] = wxPoint(x_1 + MATH_ARROW_WIDTH/2 + MATH_AXIS_MARGIN_V, MATH_ARROW_LENGTH);
         dc.SetBrush(brush);
         dc.DrawPolygon(3, vert_arrow);
         dc.DrawText(m_yname, MATH_FONT_MARGIN + MATH_ARROW_WIDTH, 0);
@@ -550,13 +675,13 @@ void wxMathPanel::DrawAxises(wxDC &dc)
     {
         x_1 = m_borders.left;
         x_2 = m_borders.right;
-        y_1 = 0;
-        y_2 = 0;
+        y_1 = y_2 = 0;
         TranslateCoordinates(x_1, y_1);
         TranslateCoordinates(x_2, y_2);
         dc.SetBrush(*wxTRANSPARENT_BRUSH);
         dc.DrawLine(x_1, y_1, x_2, y_2);
         // Draw arrow
+        x_2 = m_width;
         hor_arrow[0] = wxPoint(x_2, y_1);
         hor_arrow[1] = wxPoint(x_2 - MATH_ARROW_LENGTH, y_1 + MATH_ARROW_WIDTH/2);
         hor_arrow[2] = wxPoint(x_2 - MATH_ARROW_LENGTH, y_1 - MATH_ARROW_WIDTH/2);
@@ -569,10 +694,18 @@ void wxMathPanel::DrawAxises(wxDC &dc)
     else
     {
         // Axis is out of screen
-        dc.DrawLine(0, m_height - MATH_AXIS_MARGIN_H, m_width, m_height - MATH_AXIS_MARGIN_H);
-        hor_arrow[0] = wxPoint(m_width, m_height - MATH_AXIS_MARGIN_H);
-        hor_arrow[1] = wxPoint(m_width - MATH_ARROW_LENGTH, m_height - MATH_AXIS_MARGIN_H - MATH_ARROW_WIDTH/2);
-        hor_arrow[2] = wxPoint(m_width - MATH_ARROW_LENGTH, m_height - MATH_AXIS_MARGIN_H);
+        x_1 = m_borders.left;
+        x_2 = m_borders.right;
+        y_1 = y_2 = m_borders.bottom;
+        TranslateCoordinates(x_1, y_1);
+        TranslateCoordinates(x_2, y_2);
+        x_2 = m_width;
+        dc.DrawLine(x_1, y_1 - (m_is_y_logarithmic ? 0 : MATH_AXIS_MARGIN_H),
+                    x_2, y_1 - (m_is_y_logarithmic ? 0 : MATH_AXIS_MARGIN_H));
+
+        hor_arrow[0] = wxPoint(x_2, y_1 - (m_is_y_logarithmic ? 0 : MATH_AXIS_MARGIN_H));
+        hor_arrow[1] = wxPoint(x_2 - MATH_ARROW_LENGTH, y_1 - (m_is_y_logarithmic ? 0 : MATH_AXIS_MARGIN_H) + MATH_ARROW_WIDTH/2);
+        hor_arrow[2] = wxPoint(x_2 - MATH_ARROW_LENGTH, y_1 - (m_is_y_logarithmic ? 0 : MATH_AXIS_MARGIN_H) - MATH_ARROW_WIDTH/2);
         dc.SetBrush(brush);
         dc.DrawPolygon(3, hor_arrow);
         dc.DrawText(m_xname,
@@ -613,7 +746,7 @@ void wxMathPanel::DrawAxises(wxDC &dc)
     {
         dc.DrawText(MATH_ZERO_LABEL,
                     x_1 + MATH_FONT_MARGIN,
-                    m_height - dc.GetFont().GetPixelSize().GetHeight() - MATH_FONT_MARGIN);
+                    m_height - MATH_LABEL_SHIFT);
     }
 }
 
@@ -667,6 +800,10 @@ void wxMathPanel::DrawNetworkHorizontal(wxDC &dc)
     double incrementor = base_number*pow(10, exponent-1);
     // Net lines start position
     double start_y = static_cast<int>(m_borders.bottom/incrementor)*incrementor;
+
+    // Assign frame margins
+    // Frame margins depends on labels width
+    AssignFrames(dc, start_y, incrementor);
 
     // Label and net-lines output
     int font_size = dc.GetFont().GetPixelSize().GetHeight();
@@ -723,6 +860,7 @@ void wxMathPanel::DrawNetworkLogHorizontal(wxDC &dc)
     wxPen serif_pen(m_colour_axis);
     double x1, x2, y;
 
+    AssignFrames(dc);
     int order = log10(m_borders.bottom);
 
     x1 = m_borders.left;
@@ -1263,6 +1401,12 @@ void wxMathPanel::GetScalable(bool &is_scalable_x, bool &is_scalable_y) const
 }
 
 // View settings
+void wxMathPanel::SetFramed(bool framed)
+{
+    m_is_framed = framed;
+    this->Refresh();
+}
+
 /**\brief Makes axises logarithmically scaled.
 * \param x_axis Is X-axis logarithmic.
 * \param y_axis Is Y-axis logarithmic.
