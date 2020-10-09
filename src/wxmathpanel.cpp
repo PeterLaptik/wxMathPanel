@@ -5,7 +5,6 @@
 
 wxDEFINE_EVENT(wxMATHPANEL_MOUSE_MOVE, MouseMoveEvent);
 
-
 // Default screen position borders
 // top left corner:     [- MATH_DEF_POSITION, MATH_DEF_POSITION]
 // bottom right corner: [MATH_DEF_POSITION, - MATH_DEF_POSITION]
@@ -75,7 +74,7 @@ static const wxColour MATH_DEF_CURVE_COLOUR = *wxBLACK;
 static const wxColour MATH_DEF_LABEL_COLOUR = *wxBLACK;
 
 // Default view and behavior
-static const bool MATH_DEFAULT_FRAMED = true;
+static const bool MATH_DEFAULT_FRAMED = false;
 static const bool MATH_DEFAULT_VISIBLE_NETWORK_LINES = true;
 static const bool MATH_DEFAULT_VISIBLE_NETWORK_LABLES = true;
 static const bool MATH_DEFAULT_LOG_AXISES = false;
@@ -114,7 +113,6 @@ wxMathPanel::wxMathPanel(wxWindow *parent,
     m_borders.right = m_last_right_border = MATH_DEF_POSITION;
     m_borders.bottom = m_last_bottom_border = -MATH_DEF_POSITION;
     m_borders.top = m_last_top_border = MATH_DEF_POSITION;
-    mouse_x = mouse_y = 0;
 
     // Canvas state
     m_is_framed = MATH_DEFAULT_FRAMED;
