@@ -111,8 +111,12 @@ void wxMathPanelGraph::DrawAfter(wxDC &dc)
 // Draws functions from a list using appropriate colours
 void wxMathPanelGraph::DrawFunctions(wxDC &dc)
 {
+    double frame_left, frame_bottom;
+    double max_panel_y, min_panel_x, dummy_y; // depends on bottom frame size
     double border_left, border_right, border_top, border_bottom;
     bool is_logarithmic_x, is_logarithmic_y;
+
+    int panel_height = this->GetSize().GetHeight();
 
     if(m_functions.empty())
         return; // no functions to draw
@@ -133,6 +137,10 @@ void wxMathPanelGraph::DrawFunctions(wxDC &dc)
     // Get canvas metrics
     GetBorders(border_left, border_top, border_right, border_bottom);
     GetIsLogarithmic(is_logarithmic_x, is_logarithmic_y);
+    GetFrameSize(frame_left, frame_bottom);
+
+    ReverseTranslateCoordinates(frame_left, dummy_y);
+    panel_height -= frame_bottom;
 
     double step = GetLinearScaleX();    // define real scale steps to draw pixel by pixel
 
@@ -154,7 +162,7 @@ void wxMathPanelGraph::DrawFunctions(wxDC &dc)
         // Initialize start values
         // Do not use point if std::exception has occurred
         // Find first function value without exception
-        double x = border_left;
+        double x = frame_left;
 
         while(true)
         {
@@ -221,8 +229,8 @@ void wxMathPanelGraph::DrawFunctions(wxDC &dc)
                 continue;
             }
 
-            // Draw micro-line
-            dc.DrawLine(panel_prev_x, panel_prev_y, panel_x, panel_y);
+            if(panel_y<panel_height)
+                dc.DrawLine(panel_prev_x, panel_prev_y, panel_x, panel_y);
 
             // Remember the points as a last ones
             panel_prev_x = panel_x;

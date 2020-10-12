@@ -593,6 +593,12 @@ void wxMathPanel::AssignFrames(wxDC &dc, double start, double step)
 // Assign frames for logarithmic scales
 void wxMathPanel::AssignFrames(wxDC &dc)
 {
+    if(!m_is_framed)
+    {
+        m_frames.frame_bottom = m_frames.frame_left = 0;
+        return;
+    }
+
     wxString txt = MATH_DEC_LABEL;
     txt<<round(log10(m_borders.right));
     m_frames.frame_left = dc.GetTextExtent(txt).GetWidth() + MATH_FONT_FRAME_MARGIN;
@@ -1180,6 +1186,8 @@ void wxMathPanel::GetBorders(double &left, double &top, double &right, double &b
 }
 
 /**\brief Returns left and bottom frames.
+*
+* If SetFramed is not set to true, the both values are equal to zero frame size.
 * \param left_frame Value for a left frame.
 * \param bottom_frame Value for a bottom frame.
 */
@@ -1394,7 +1402,12 @@ void wxMathPanel::GetScalable(bool &is_scalable_x, bool &is_scalable_y) const
     is_scalable_y = m_scalable.is_scalable_y;
 }
 
-// View settings
+/**\brief Calculates left and right frames according to the labels font properties.
+*
+* The frame values can be used to avoid drawing intersections with text labels.
+* \param framed Should frames to be computed.
+* \see GetFrameSize
+*/
 void wxMathPanel::SetFramed(bool framed)
 {
     m_is_framed = framed;
