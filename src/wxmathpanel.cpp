@@ -414,7 +414,7 @@ void wxMathPanel::DrawAfter(wxDC &dc)
 * \param x Real x-coordinate to translate.
 * \param y Real y-coordinate to translate.
 */
-void wxMathPanel::TranslateCoordinates(double &x, double &y)
+void wxMathPanel::TranslateCoordinates(double &x, double &y) const
 {
     double a, b;    // logarithmic borders
     double c;       // logarithmic position
@@ -465,18 +465,13 @@ void wxMathPanel::TranslateCoordinates(double &x, double &y)
     if(y>m_height)
         y = m_height + MATH_OUT_OF_CANVAS_VALUE;
 
-    if(m_is_framed)
-    {
-        x += m_borders.frame_left;
-        y -= m_borders.frame_bottom;
-    }
 }
 
 /**\brief Translates real x-coordinate to the coordinate on the panel
 * (real x -> x on panel).
 * \param x Real x-coordinate to translate.
 */
-void wxMathPanel::TranslateXCoordinate(double &x)
+void wxMathPanel::TranslateXCoordinate(double &x) const
 {
     double a, b;    // logarithmic borders
     double c;       // logarithmic position
@@ -500,16 +495,13 @@ void wxMathPanel::TranslateXCoordinate(double &x)
 
     if(x>m_width)
         x = m_width + MATH_OUT_OF_CANVAS_VALUE;
-
-    if(m_is_framed)
-        x += m_borders.frame_left;
 }
 
 /**\brief Translates real y-coordinate to the coordinate on the panel
 * (real y -> y on panel).
 * \param y Real y-coordinate to translate.
 */
-void wxMathPanel::TranslateYCoordinate(double &y)
+void wxMathPanel::TranslateYCoordinate(double &y) const
 {
     double a, b;    // logarithmic borders
     double c;       // logarithmic position
@@ -532,21 +524,12 @@ void wxMathPanel::TranslateYCoordinate(double &y)
 
     if(y>m_height)
         y = m_height + MATH_OUT_OF_CANVAS_VALUE;
-
-    if(m_is_framed)
-        y -= m_borders.frame_bottom;
 }
 
-void wxMathPanel::ReverseTranslateCoordinates(double &x, double &y)
+void wxMathPanel::ReverseTranslateCoordinates(double &x, double &y) const
 {
     double a, b;    // logarithmic borders
     double c;       // logarithmic position
-
-    if(m_is_framed)
-    {
-        x -= m_borders.frame_left;
-        y += m_borders.frame_bottom;
-    }
 
     double left = m_borders.left;
     double right = m_borders.right;
@@ -580,7 +563,7 @@ void wxMathPanel::ReverseTranslateCoordinates(double &x, double &y)
 }
 
 // Assign frame sizes for linear scales
-void wxMathPanel::AssignFrames(wxDC &dc, int start, int step)
+void wxMathPanel::AssignFrames(wxDC &dc, double start, double step)
 {
     int result = 0;
     int text_size;
@@ -588,7 +571,7 @@ void wxMathPanel::AssignFrames(wxDC &dc, int start, int step)
 
     if(!m_is_framed)
     {
-        m_borders.frame_bottom = m_borders.frame_left = 0;
+        m_frames.frame_bottom = m_frames.frame_left = 0;
         return;
     }
 
@@ -603,8 +586,8 @@ void wxMathPanel::AssignFrames(wxDC &dc, int start, int step)
         start += step;
     }
 
-    m_borders.frame_left = result + MATH_FONT_FRAME_MARGIN;
-    m_borders.frame_bottom = dc.GetFont().GetPixelSize().GetHeight() + MATH_FONT_FRAME_MARGIN;
+    m_frames.frame_left = result + MATH_FONT_FRAME_MARGIN;
+    m_frames.frame_bottom = dc.GetFont().GetPixelSize().GetHeight() + MATH_FONT_FRAME_MARGIN;
 }
 
 // Assign frames for logarithmic scales
@@ -612,8 +595,8 @@ void wxMathPanel::AssignFrames(wxDC &dc)
 {
     wxString txt = MATH_DEC_LABEL;
     txt<<round(log10(m_borders.right));
-    m_borders.frame_left = dc.GetTextExtent(txt).GetWidth() + MATH_FONT_FRAME_MARGIN;
-    m_borders.frame_bottom = dc.GetFont().GetPixelSize().GetHeight() + MATH_FONT_FRAME_MARGIN;
+    m_frames.frame_left = dc.GetTextExtent(txt).GetWidth() + MATH_FONT_FRAME_MARGIN;
+    m_frames.frame_bottom = dc.GetFont().GetPixelSize().GetHeight() + MATH_FONT_FRAME_MARGIN;
 }
 
 // Draws axises O-x, O-y
@@ -718,13 +701,16 @@ void wxMathPanel::DrawAxises(wxDC &dc)
     // Draw zero value with respect to intersections
     x_1 = y_1 = 0;
     TranslateCoordinates(x_1, y_1);
-    if((m_is_x_logarithmic)&&(y_1 + dc.GetFont().GetPixelSize().GetHeight() + MATH_FONT_MARGIN > m_height))
+
+    if((x_1 + dc.GetTextExtent(m_xname).GetWidth() + MATH_FONT_MARGIN > m_width - dc.GetTextExtent(MATH_ZERO_LABEL).GetWidth())
+       &&(m_borders.right>0))
         return;
 
-    if(x_1 + dc.GetTextExtent(m_xname).GetWidth() + MATH_FONT_MARGIN > m_width - dc.GetTextExtent(MATH_ZERO_LABEL).GetWidth())
+    if((m_borders.right<0)&&(m_borders.top<0))
         return;
 
-    if(y_1 - dc.GetTextExtent(MATH_ZERO_LABEL).GetHeight() < MATH_ARROW_WIDTH + MATH_FONT_MARGIN*2)
+    if((y_1 - dc.GetTextExtent(MATH_ZERO_LABEL).GetHeight() < MATH_ARROW_WIDTH + MATH_FONT_MARGIN*2)
+       &&(m_borders.top>0))
         return;
 
     if(((m_borders.left<=0)&&(m_borders.right>=0))&&
@@ -1191,6 +1177,16 @@ void wxMathPanel::GetBorders(double &left, double &top, double &right, double &b
     top = m_borders.top;
     right = m_borders.right;
     bottom = m_borders.bottom;
+}
+
+/**\brief Returns left and bottom frames.
+* \param left_frame Value for a left frame.
+* \param bottom_frame Value for a bottom frame.
+*/
+void wxMathPanel::GetFrameSize(double &left_frame, double &bottom_frame) const
+{
+    left_frame = m_frames.frame_left;
+    bottom_frame = m_frames.frame_bottom;
 }
 
 /**\brief Sets canvas restraints.

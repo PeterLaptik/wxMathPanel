@@ -28,6 +28,7 @@ class wxMathPanel: public wxPanel
         void ZoomOut(void);
         void SetBorders(const double &left, const double &top, const double &right, const double &bottom);
         void GetBorders(double &left, double &top, double &right, double &bottom) const;
+        void GetFrameSize(double &left_frame, double &bottom_frame) const;
 
         ///\name Restraints
         void SetRestraints(const double &left_border, const double &top_border, const double &right_border, const double &bottom_border);
@@ -84,11 +85,11 @@ class wxMathPanel: public wxPanel
         double GetLinearScaleY(void) const;
         double GetLogStepFor(double x_point);
         // Translate coordinates from real values to the canvas values
-        void TranslateCoordinates(double &x, double &y);
-        void TranslateXCoordinate(double &x);
-        void TranslateYCoordinate(double &y);
+        void TranslateCoordinates(double &x, double &y) const;
+        void TranslateXCoordinate(double &x) const;
+        void TranslateYCoordinate(double &y) const;
         // Reverse translate
-        void ReverseTranslateCoordinates(double &x, double &y);
+        void ReverseTranslateCoordinates(double &x, double &y) const;
         /// \}
 
     protected:
@@ -111,7 +112,7 @@ class wxMathPanel: public wxPanel
         void CheckBorders(wxDC &dc);
 
         // Frame size
-        void AssignFrames(wxDC &dc, int start, int step);
+        void AssignFrames(wxDC &dc, double start, double step);
         void AssignFrames(wxDC &dc);
 
         // Sub-routines for logarithmic axises scales
@@ -129,9 +130,13 @@ class wxMathPanel: public wxPanel
             double right;
             double top;
             double bottom;
+        } m_borders;
+
+        struct MathPanelFrame
+        {
             double frame_left;      // frame sift value for framed screen
             double frame_bottom;    // frame sift value for framed screen
-        } m_borders;
+        } m_frames;
 
         // Screen restraints
         // The screen cannot be scaled or moved to border values out of restraints
