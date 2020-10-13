@@ -4,15 +4,16 @@
 #include "ifunction.h"
 #include "ipointset.h"
 #include "pointlabel.h"
+#include "wxmathpanel.h"
 #include <wx/dcclient.h>
 #include <map>
 
 
-/**\brief Simple self-drawing legend */
+/**\brief Simple self-drawing legend. */
 class MathLegend
 {
     public:
-        MathLegend();
+        MathLegend(wxMathPanel *parent);
         virtual ~MathLegend();
 
         void AppendItem(wxString name, wxColour colour, PointLabelType ltype);
@@ -48,6 +49,7 @@ class MathLegend
         inline int GetMaxHeight(const wxDC &dc) const;
         inline PointLabel* GetPointLabelObject(PointLabelType ptype);
 
+        wxMathPanel *m_parent;
         bool m_is_visible;
         bool m_is_movable;
         bool m_has_shadow;

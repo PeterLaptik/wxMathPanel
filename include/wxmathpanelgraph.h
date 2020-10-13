@@ -6,6 +6,10 @@
 #include "ifunction.h"
 
 
+/**\brief Class for drawing curves by equations.
+*
+* Functions to be drawn have to implement the interface IDrawableFunction.
+*/
 class wxMathPanelGraph : public wxMathPanel
 {
     public:
@@ -24,6 +28,12 @@ class wxMathPanelGraph : public wxMathPanel
         void SetHighQuality(bool hq = true);
         void SetCurveThickness(int thickness);
         int GetCurveThickness(void) const;
+        void SetManualStep(int step);
+        void ResetManualStep(void);
+
+        // Margins
+        void SetUseMargins(bool use_margins = true);
+        bool GetUseMargins(void) const;
 
         // Legend
         MathLegend* GetLegend(void) const;
@@ -45,6 +55,8 @@ class wxMathPanelGraph : public wxMathPanel
         std::vector<IDrawableFunction*> m_functions;    // Functions` data
         int m_thickness;    // curve thickness
         bool m_quality;
+        int m_manual_step;
+        bool m_has_margins;
 
         // Legend
         MathLegend *m_legend;

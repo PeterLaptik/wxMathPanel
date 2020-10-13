@@ -5,11 +5,12 @@
 #include <wx/panel.h>
 #include <wx/dcclient.h>
 #include <math.h>
-#include <vector>
 
-//wxDEFINE_EVENT(MY_NEW_TYPE, wxCommandEvent);
-//wxDEFINE_EVENT(wxMATHPANEL_MOUSE_MOVE, MouseMoveEvent);
 
+/**\brief Base class for the math panel witch implements main behavior settings.
+*
+* Curves plotting has to be implemented in inherited classes using DrawAfter method.
+*/
 class wxMathPanel: public wxPanel
 {
     public:
@@ -28,7 +29,7 @@ class wxMathPanel: public wxPanel
         void ZoomOut(void);
         void SetBorders(const double &left, const double &top, const double &right, const double &bottom);
         void GetBorders(double &left, double &top, double &right, double &bottom) const;
-        void GetFrameSize(double &left_frame, double &bottom_frame) const;
+        void GetLabelMargins(double &left_margin, double &bottom_margin) const;
 
         ///\name Restraints
         void SetRestraints(const double &left_border, const double &top_border, const double &right_border, const double &bottom_border);
@@ -45,7 +46,6 @@ class wxMathPanel: public wxPanel
         void GetScalable(bool &is_scalable_x, bool &is_scalable_y) const;
 
         ///\name View
-        void SetFramed(bool framed = true);
         void SetLogarithmic(bool x_axis, bool y_axis);
         void ShowLabels(bool x_labels, bool y_labels);
         void ShowNetLines(bool show_x, bool show_y);
@@ -132,10 +132,11 @@ class wxMathPanel: public wxPanel
             double bottom;
         } m_borders;
 
+        // Margins from left and bottom for text labels
         struct MathPanelFrame
         {
-            double frame_left;      // frame sift value for framed screen
-            double frame_bottom;    // frame sift value for framed screen
+            double frame_left;      // frame sift value from labels
+            double frame_bottom;    // frame sift value from labels
         } m_frames;
 
         // Screen restraints
@@ -149,7 +150,6 @@ class wxMathPanel: public wxPanel
         } m_restraints;
 
         // View
-        bool m_is_framed;
         bool m_is_x_logarithmic, m_is_y_logarithmic;
         bool m_show_axises;
         bool m_show_x_net_lines, m_show_y_net_lines;
@@ -171,8 +171,6 @@ class wxMathPanel: public wxPanel
         double m_x, m_y;                // mouse coordinates over panel
         double m_start_x, m_start_y;    // mouse coordinates on dragging start (when mouse left button has been pressed)
         bool m_is_movable;              // can screen be dragged by mouse
-
-
 
         struct MathPanelScalability
         {

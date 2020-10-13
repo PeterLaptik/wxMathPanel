@@ -31,7 +31,7 @@ wxMathPanelPointGraph::wxMathPanelPointGraph(wxWindow *parent,
     Bind(wxEVT_MOTION, &wxMathPanelPointGraph::EventMouseMove, this);
     Bind(wxEVT_LEAVE_WINDOW, &wxMathPanelPointGraph::EventMouseLeave, this);
     Bind(wxEVT_SIZE, &wxMathPanelPointGraph::EventResize, this);
-    m_legend = new MathLegend();
+    m_legend = new MathLegend(this);
     m_is_legend_dragging = false;
     m_thickness = DEFAULT_CURVE_THICKNESS;
     m_label_size = MATH_PANEL_DEFAULT_LABEL;
@@ -426,6 +426,9 @@ PointLabel* wxMathPanelPointGraph::GetLabelObject(PointLabelType ptype)
                 break;
             case POINT_TYPE_CROSS:
                 label = new PointLabelCross(m_label_size);
+                break;
+            case POINT_TYPE_NOLABEL:
+                label = NULL;
                 break;
         }
     return label;

@@ -1,8 +1,11 @@
 #include "../include/wxmathpanel.h"
 #include <wx/dcbuffer.h>
 
+// Comment the line below to turn off double buffering
 #define MATH_PANEL_TURN_ON_DOUBLE_BUFFERING
 
+// Custom event that occurs while mouse pointer is moving
+// Keeps current mouse coordinates
 wxDEFINE_EVENT(wxMATHPANEL_MOUSE_MOVE, MouseMoveEvent);
 
 // Default screen position borders
@@ -74,7 +77,6 @@ static const wxColour MATH_DEF_CURVE_COLOUR = *wxBLACK;
 static const wxColour MATH_DEF_LABEL_COLOUR = *wxBLACK;
 
 // Default view and behavior
-static const bool MATH_DEFAULT_FRAMED = false;
 static const bool MATH_DEFAULT_VISIBLE_NETWORK_LINES = true;
 static const bool MATH_DEFAULT_VISIBLE_NETWORK_LABLES = true;
 static const bool MATH_DEFAULT_LOG_AXISES = false;
@@ -115,7 +117,6 @@ wxMathPanel::wxMathPanel(wxWindow *parent,
     m_borders.top = m_last_top_border = MATH_DEF_POSITION;
 
     // Canvas state
-    m_is_framed = MATH_DEFAULT_FRAMED;
     m_is_dragging = false;
     m_is_movable = MATH_DEFAULT_MOVABLE;
     m_scalable.is_scalable_x = m_scalable.is_scalable_y = MATH_DEFAULT_SCALABLE;
@@ -377,6 +378,16 @@ void wxMathPanel::CheckBorders(wxDC &dc)
 
     if(m_borders.bottom<m_restraints.bottom)
         m_borders.bottom=m_restraints.bottom;
+
+    // Logarithmic scale restraints
+    if(m_is_x_logarithmic)
+    {
+        if(m_borders.right<m_minimum_log_value)
+            m_borders.right = m_minimum_log_value*10;
+
+        if(m_borders.top<m_minimum_log_value)
+            m_borders.top = m_minimum_log_value*10;
+    }
 }
 
 /**\brief Calculates real scale difference for the logarithmic X-axis that match to one-pixel step on the panel.
@@ -569,12 +580,6 @@ void wxMathPanel::AssignFrames(wxDC &dc, double start, double step)
     int text_size;
     wxString label_val;
 
-    if(!m_is_framed)
-    {
-        m_frames.frame_bottom = m_frames.frame_left = 0;
-        return;
-    }
-
     while(start<m_borders.top)
     {
         label_val.Clear();
@@ -593,12 +598,6 @@ void wxMathPanel::AssignFrames(wxDC &dc, double start, double step)
 // Assign frames for logarithmic scales
 void wxMathPanel::AssignFrames(wxDC &dc)
 {
-    if(!m_is_framed)
-    {
-        m_frames.frame_bottom = m_frames.frame_left = 0;
-        return;
-    }
-
     wxString txt = MATH_DEC_LABEL;
     txt<<round(log10(m_borders.right));
     m_frames.frame_left = dc.GetTextExtent(txt).GetWidth() + MATH_FONT_FRAME_MARGIN;
@@ -1185,16 +1184,16 @@ void wxMathPanel::GetBorders(double &left, double &top, double &right, double &b
     bottom = m_borders.bottom;
 }
 
-/**\brief Returns left and bottom frames.
+/**\brief Returns left and bottom margins for the text labels.
 *
-* If SetFramed is not set to true, the both values are equal to zero frame size.
-* \param left_frame Value for a left frame.
-* \param bottom_frame Value for a bottom frame.
+* The values can be used in inherited classes to avoid labels text-curves intersections.
+* \param left_frame Value for a left margin.
+* \param bottom_frame Value for a bottom margin.
 */
-void wxMathPanel::GetFrameSize(double &left_frame, double &bottom_frame) const
+void wxMathPanel::GetLabelMargins(double &left_margin, double &bottom_margin) const
 {
-    left_frame = m_frames.frame_left;
-    bottom_frame = m_frames.frame_bottom;
+    left_margin = m_frames.frame_left;
+    bottom_margin = m_frames.frame_bottom;
 }
 
 /**\brief Sets canvas restraints.
@@ -1407,12 +1406,13 @@ void wxMathPanel::GetScalable(bool &is_scalable_x, bool &is_scalable_y) const
 * The frame values can be used to avoid drawing intersections with text labels.
 * \param framed Should frames to be computed.
 * \see GetFrameSize
-*/
+*//*
 void wxMathPanel::SetFramed(bool framed)
 {
     m_is_framed = framed;
     this->Refresh();
 }
+*/
 
 /**\brief Makes axises logarithmically scaled.
 * \param x_axis Is X-axis logarithmic.
