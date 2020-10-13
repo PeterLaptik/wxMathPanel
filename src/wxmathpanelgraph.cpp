@@ -3,8 +3,17 @@
 static const int DEFAULT_CURVE_THICKNESS = 2;
 static const int MAXIMUM_CURVE_THICKNESS = 5;
 
+// Show left and bottom distance from the panel edges to the drawing curves
+static const bool PANEL_HAS_MARGINS = false;
+
 // Default value used as template to decrease quality for higher performance
 static const int wxMATHPANEL_TEMPLATE_WIDTH = 640;
+static const bool DEFAULT_HQ_ON = false;
+
+// Manual pixel step sizing
+static const int NO_STEP = -1;
+static const int STEP_MIN = 1;
+static const int STEP_MAX = 32;
 
 
 /**\brief Default constructor.
@@ -27,10 +36,12 @@ wxMathPanelGraph::wxMathPanelGraph(wxWindow *parent,
     Bind(wxEVT_MOTION, &wxMathPanelGraph::EventMouseMove, this);
     Bind(wxEVT_LEAVE_WINDOW, &wxMathPanelGraph::EventMouseLeave, this);
     Bind(wxEVT_SIZE, &wxMathPanelGraph::EventResize, this);
-    m_legend = new MathLegend();
+    m_legend = new MathLegend(this);
     m_is_legend_dragging = false;
     m_thickness = DEFAULT_CURVE_THICKNESS;
-    m_quality = false;
+    m_quality = DEFAULT_HQ_ON;
+    m_manual_step = NO_STEP;
+    m_has_margins = PANEL_HAS_MARGINS;
 }
 
 /**\brief Destructor */
@@ -93,6 +104,33 @@ int wxMathPanelGraph::GetCurveThickness() const
     return m_thickness;
 }
 
+/**\brief Sets manual step in pixels for curves plotting.
+*
+* Can be used to increase performance of plotting.
+* \param step Step size in pixels. Value should be between 1 and 10 pixels.
+* If value is not set the step will be computed automatically (step size depends on panel size and functions quantity).
+* \see SetHighQuality
+*/
+void wxMathPanelGraph::SetManualStep(int step)
+{
+    if((step<STEP_MIN)||(step>STEP_MAX))
+        m_manual_step = NO_STEP;
+
+    m_manual_step = step;
+    this->Refresh();
+}
+
+/**\brief Resets plot step in pixels to default value.
+*
+* I.e. step size will be computed automatically (depends on panel size and functions quantity).
+* \see SetManualStep
+*/
+void wxMathPanelGraph::ResetManualStep()
+{
+    m_manual_step = NO_STEP;
+    this->Refresh();
+}
+
 /**\brief Returns a legend object.
 * \return Pointer to the legend.
 */
@@ -101,7 +139,27 @@ MathLegend* wxMathPanelGraph::GetLegend() const
     return m_legend;
 }
 
-/**\brief Draws curves and legend */
+/**\brief Assigns distance from a curves to the left and bottom edges to prevent curve-text labels intersections.
+* \param use_margins Use / do not use margins.
+*/
+void wxMathPanelGraph::SetUseMargins(bool use_margins)
+{
+    m_has_margins = use_margins;
+    this->Refresh();
+}
+
+/**\brief Returns information about margins usage.
+* \return Whether the margins are used on the panel.
+*/
+bool wxMathPanelGraph::GetUseMargins() const
+{
+    return m_has_margins;
+}
+
+/**\brief Draws curves and shows a legend.
+*
+* Overrided method from wxMathPanel.
+*/
 void wxMathPanelGraph::DrawAfter(wxDC &dc)
 {
     this->DrawFunctions(dc);
@@ -111,8 +169,11 @@ void wxMathPanelGraph::DrawAfter(wxDC &dc)
 // Draws functions from a list using appropriate colours
 void wxMathPanelGraph::DrawFunctions(wxDC &dc)
 {
+    double frame_left, frame_bottom, dummy_y; // depends on bottom margins size
     double border_left, border_right, border_top, border_bottom;
     bool is_logarithmic_x, is_logarithmic_y;
+
+    int panel_height = this->GetSize().GetHeight();
 
     if(m_functions.empty())
         return; // no functions to draw
@@ -120,6 +181,7 @@ void wxMathPanelGraph::DrawFunctions(wxDC &dc)
     int INCREMENTOR = 1;    // value that increments steps during curve drawing
     int dc_width = dc.GetSize().GetWidth();
 
+    // Automatic step incrementation computing
     if(!m_quality)
     {
         INCREMENTOR = dc_width > wxMATHPANEL_TEMPLATE_WIDTH ?
@@ -130,9 +192,17 @@ void wxMathPanelGraph::DrawFunctions(wxDC &dc)
     if(INCREMENTOR<1)
         INCREMENTOR = 1;
 
+    // Reset to manual step incrementation value if it is set
+    if(m_manual_step!=NO_STEP)
+        INCREMENTOR = m_manual_step;
+
     // Get canvas metrics
     GetBorders(border_left, border_top, border_right, border_bottom);
     GetIsLogarithmic(is_logarithmic_x, is_logarithmic_y);
+    GetLabelMargins(frame_left, frame_bottom);
+
+    ReverseTranslateCoordinates(frame_left, dummy_y);
+    panel_height -= frame_bottom;
 
     double step = GetLinearScaleX();    // define real scale steps to draw pixel by pixel
 
@@ -154,7 +224,7 @@ void wxMathPanelGraph::DrawFunctions(wxDC &dc)
         // Initialize start values
         // Do not use point if std::exception has occurred
         // Find first function value without exception
-        double x = border_left;
+        double x = m_has_margins ? frame_left : border_left;
 
         while(true)
         {
@@ -221,8 +291,8 @@ void wxMathPanelGraph::DrawFunctions(wxDC &dc)
                 continue;
             }
 
-            // Draw micro-line
-            dc.DrawLine(panel_prev_x, panel_prev_y, panel_x, panel_y);
+            if((panel_y<panel_height)||(!m_has_margins))
+                dc.DrawLine(panel_prev_x, panel_prev_y, panel_x, panel_y);
 
             // Remember the points as a last ones
             panel_prev_x = panel_x;
@@ -339,3 +409,4 @@ void wxMathPanelGraph::EventMouseLeave(wxMouseEvent &event)
     m_is_legend_dragging = false;
     wxMathPanel::EventMouseLeave(event);
 }
+

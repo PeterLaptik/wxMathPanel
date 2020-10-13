@@ -1,12 +1,16 @@
 #ifndef WXMATHPANEL_H
 #define WXMATHPANEL_H
 
+#include "mouseevent.h"
 #include <wx/panel.h>
 #include <wx/dcclient.h>
 #include <math.h>
-#include <vector>
 
 
+/**\brief Base class for the math panel witch implements main behavior settings.
+*
+* Curves plotting has to be implemented in inherited classes using DrawAfter method.
+*/
 class wxMathPanel: public wxPanel
 {
     public:
@@ -25,6 +29,7 @@ class wxMathPanel: public wxPanel
         void ZoomOut(void);
         void SetBorders(const double &left, const double &top, const double &right, const double &bottom);
         void GetBorders(double &left, double &top, double &right, double &bottom) const;
+        void GetLabelMargins(double &left_margin, double &bottom_margin) const;
 
         ///\name Restraints
         void SetRestraints(const double &left_border, const double &top_border, const double &right_border, const double &bottom_border);
@@ -80,9 +85,11 @@ class wxMathPanel: public wxPanel
         double GetLinearScaleY(void) const;
         double GetLogStepFor(double x_point);
         // Translate coordinates from real values to the canvas values
-        void TranslateCoordinates(double &x, double &y);
-        void TranslateXCoordinate(double &x);
-        void TranslateYCoordinate(double &y);
+        void TranslateCoordinates(double &x, double &y) const;
+        void TranslateXCoordinate(double &x) const;
+        void TranslateYCoordinate(double &y) const;
+        // Reverse translate
+        void ReverseTranslateCoordinates(double &x, double &y) const;
         /// \}
 
     protected:
@@ -104,6 +111,10 @@ class wxMathPanel: public wxPanel
         void DrawNetworkLogVertical(wxDC &dc);
         void CheckBorders(wxDC &dc);
 
+        // Frame size
+        void AssignFrames(wxDC &dc, double start, double step);
+        void AssignFrames(wxDC &dc);
+
         // Sub-routines for logarithmic axises scales
         void SetLogarithmicX(bool is_logarithmic);
         void SetLogarithmicY(bool is_logarithmic);
@@ -120,6 +131,13 @@ class wxMathPanel: public wxPanel
             double top;
             double bottom;
         } m_borders;
+
+        // Margins from left and bottom for text labels
+        struct MathPanelFrame
+        {
+            double frame_left;      // frame sift value from labels
+            double frame_bottom;    // frame sift value from labels
+        } m_frames;
 
         // Screen restraints
         // The screen cannot be scaled or moved to border values out of restraints

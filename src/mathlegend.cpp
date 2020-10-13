@@ -17,11 +17,12 @@ static const int DEFAULT_SHADOW_THICKNESS = 3;
 static const int L_LINE_LENGTH = 50;
 
 
-/** \brief Constructor for wxMathPanelGraph legend.
-* \param functions Functions list.
+/** \brief Constructor for the legend.
+* \param parent wxMathPanel instance where the legend is to be drawn.
 */
-MathLegend::MathLegend()
+MathLegend::MathLegend(wxMathPanel *parent)
 {
+    m_parent = parent;
     m_metrics.x = m_metrics.y = 0;
     m_metrics.height = m_metrics.width = L_DEFAULT_SIZE;
     m_colours.background = DEFAULT_BACKGROUND_COLOUR;
@@ -69,6 +70,7 @@ void MathLegend::SetPosition(int x, int y)
 {
     m_metrics.x = x;
     m_metrics.y = y;
+    m_parent->Refresh();
 }
 
 /**\brief Returns legend size and position.
@@ -109,6 +111,7 @@ bool MathLegend::GetMovable() const
 void MathLegend::SetVisible(bool visible)
 {
     m_is_visible = visible;
+    m_parent->Refresh();
 }
 
 /**\brief Returns visibility of the legend.
@@ -127,6 +130,7 @@ bool MathLegend::GetVisible() const
 void MathLegend::SetBackgroundColour(wxColour colour)
 {
     m_colours.background = colour;
+    m_parent->Refresh();
 }
 
 /**\brief Sets legend text colour.
@@ -137,6 +141,7 @@ void MathLegend::SetBackgroundColour(wxColour colour)
 void MathLegend::SetTextColour(wxColour colour)
 {
     m_colours.text = colour;
+    m_parent->Refresh();
 }
 
 /**\brief Sets legend frame colour.
@@ -147,6 +152,7 @@ void MathLegend::SetTextColour(wxColour colour)
 void MathLegend::SetFrameColour(wxColour colour)
 {
     m_colours.frame = colour;
+    m_parent->Refresh();
 }
 
 /**\brief Returns legend colour.
@@ -182,6 +188,7 @@ wxColour MathLegend::GetFrameColour() const
 void MathLegend::SetShadow(bool shadow)
 {
     m_has_shadow = shadow;
+    m_parent->Refresh();
 }
 
 /**\brief Returns visibility of the legend shadow.
@@ -312,6 +319,8 @@ PointLabel* MathLegend::GetPointLabelObject(PointLabelType ptype)
             case POINT_TYPE_CROSS:
                 label = new PointLabelCross(L_DEFAULT_LABEL_SIZE);
                 break;
+            case POINT_TYPE_NOLABEL:
+                label = NULL;
         }
     return label;
 }
