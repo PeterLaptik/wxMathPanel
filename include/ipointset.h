@@ -3,6 +3,7 @@
 
 #include <vector>
 
+
 /**\brief An entity for a point set.
 * \see IPointSet
 */
@@ -13,10 +14,7 @@ struct GraphPoint
     GraphPoint(double X, double Y): x(X), y(Y) { }
 };
 
-/**\brief Types of point labels for the wxMathPanelPointGraph.
-*
-* The type is to be kept in IPointSet object.
-*/
+
 enum PointLabelType
 {
     POINT_TYPE_CIRCLE = 0,
@@ -25,6 +23,7 @@ enum PointLabelType
     POINT_TYPE_CROSS = 3,
     POINT_TYPE_NOLABEL = 4
 };
+
 
 /** \brief Interface for drawable interpolated function.
 *
@@ -35,7 +34,7 @@ class IPointSet
     public:
         /** \brief Returns set of points to be plotted and interpolated.
         *
-        * \return Point set (the set kept in a vector).
+        * \return Point set (the set is kept in a vector).
         * \see GraphPoint
         */
         virtual std::vector<GraphPoint>& GetPoints(void) = 0;
@@ -48,7 +47,8 @@ class IPointSet
 
 
         /** \brief Returns point label for a point set.
-        * \return PointLabelType enumeration value.
+        * \return PointLabelType enumeration value
+        * (POINT_TYPE_CIRCLE, POINT_TYPE_SQUARE, POINT_TYPE_TRIANGLE, POINT_TYPE_CROSS or POINT_TYPE_NOLABEL)
         */
         virtual PointLabelType GetLabels(void) = 0;
 

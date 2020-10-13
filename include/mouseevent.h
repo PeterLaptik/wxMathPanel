@@ -8,8 +8,8 @@ wxDECLARE_EVENT(wxMATHPANEL_MOUSE_MOVE, MouseMoveEvent);
 
 /**\brief Mouse event.
 *
-* Occurs each time on mouse move over the panel.
-* Keeps coordinates of the mouse pointer.
+* Occurs each time on mouse moves over a panel.
+* Keeps coordinates of a mouse pointer translated to the real units.
 */
 class MouseMoveEvent: public wxCommandEvent
 {
