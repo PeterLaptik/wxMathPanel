@@ -1,9 +1,7 @@
 # wxWidgets library config
 # Change value for other versions
-# or use an appropriate symbolic link 'wx-config'
-#
-# For wxWidgets-2.8:
-# WXFLAGS = `wxgtk2u-2.8-config --cxxflags`
+# or use an appropriate symbolic link 'wx-config'.
+# Note: the classes does not compatible with wx-2.8.
 #
 WXFLAGS = `wxgtk3u-3.0-config --cxxflags`
 
