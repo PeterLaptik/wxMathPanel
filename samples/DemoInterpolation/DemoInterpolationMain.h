@@ -38,6 +38,7 @@ class DemoInterpolationFrame: public wxFrame
         void OnShowTails(wxCommandEvent& event);
         void OnResetScale(wxCommandEvent& event);
         void OnLessCurves(wxCommandEvent& event);
+        void OnSavePicture(wxCommandEvent& event);
         //*)
 
         //(*Identifiers(DemoInterpolationFrame)
@@ -49,6 +50,7 @@ class DemoInterpolationFrame: public wxFrame
         static const long ID_CHECKBOX3;
         static const long ID_CHECKBOX6;
         static const long ID_BUTTON1;
+        static const long ID_BUTTON2;
         static const long ID_PANEL1;
         static const long idMenuQuit;
         static const long idMenuAbout;
@@ -57,6 +59,7 @@ class DemoInterpolationFrame: public wxFrame
 
         //(*Declarations(DemoInterpolationFrame)
         wxButton* Button1;
+        wxButton* Button2;
         wxCheckBox* CheckBox1;
         wxCheckBox* CheckBox2;
         wxCheckBox* CheckBox3;
@@ -69,6 +72,7 @@ class DemoInterpolationFrame: public wxFrame
         //*)
 
         void OnCustomEvent(MouseMoveEvent &event);
+        bool AskUserDialogue(const wxString &question, const wxString &header);
 
         DECLARE_EVENT_TABLE()
 };

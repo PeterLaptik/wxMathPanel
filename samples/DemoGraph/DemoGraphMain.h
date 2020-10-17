@@ -39,6 +39,7 @@ class DemoGraphFrame: public wxFrame
         void OnSetFramed(wxCommandEvent& event);
         void OnChangeStep(wxCommandEvent& event);
         void OnShowLegend(wxCommandEvent& event);
+        void OnSaveScreen(wxCommandEvent& event);
         //*)
 
         //(*Identifiers(DemoGraphFrame)
@@ -52,6 +53,7 @@ class DemoGraphFrame: public wxFrame
         static const long ID_CHECKBOX7;
         static const long ID_CHECKBOX8;
         static const long ID_BUTTON1;
+        static const long ID_BUTTON2;
         static const long ID_PANEL3;
         static const long ID_PANEL1;
         static const long idMenuQuit;
@@ -61,6 +63,7 @@ class DemoGraphFrame: public wxFrame
 
         //(*Declarations(DemoGraphFrame)
         wxButton* Button1;
+        wxButton* Button2;
         wxCheckBox* CheckBox1;
         wxCheckBox* CheckBox2;
         wxCheckBox* CheckBox3;
@@ -75,7 +78,9 @@ class DemoGraphFrame: public wxFrame
         wxStatusBar* StatusBar1;
         //*)
 
+        /** On mouse move over the panel */
         void OnCustomEvent(MouseMoveEvent &event);
+        bool AskUserDialogue(const wxString &question, const wxString &header);
 
         DECLARE_EVENT_TABLE()
 };

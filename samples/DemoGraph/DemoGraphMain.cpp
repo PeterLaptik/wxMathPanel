@@ -10,6 +10,7 @@
 #include "Function3.h"
 #include "Function4.h"
 #include <wx/msgdlg.h>
+#include <wx/filedlg.h>
 
 //(*InternalHeaders(DemoGraphFrame)
 #include <wx/intl.h>
@@ -33,6 +34,7 @@ const long DemoGraphFrame::ID_CHECKBOX6 = wxNewId();
 const long DemoGraphFrame::ID_CHECKBOX7 = wxNewId();
 const long DemoGraphFrame::ID_CHECKBOX8 = wxNewId();
 const long DemoGraphFrame::ID_BUTTON1 = wxNewId();
+const long DemoGraphFrame::ID_BUTTON2 = wxNewId();
 const long DemoGraphFrame::ID_PANEL3 = wxNewId();
 const long DemoGraphFrame::ID_PANEL1 = wxNewId();
 const long DemoGraphFrame::idMenuQuit = wxNewId();
@@ -90,6 +92,8 @@ DemoGraphFrame::DemoGraphFrame(wxWindow* parent,wxWindowID id)
     BoxSizer2->Add(CheckBox8, 0, wxALL|wxALIGN_LEFT, 5);
     Button1 = new wxButton(Panel3, ID_BUTTON1, _("Reset"), wxDefaultPosition, wxDefaultSize, 0, wxDefaultValidator, _T("ID_BUTTON1"));
     BoxSizer2->Add(Button1, 0, wxALL|wxALIGN_LEFT, 5);
+    Button2 = new wxButton(Panel3, ID_BUTTON2, _("Save screen"), wxDefaultPosition, wxDefaultSize, 0, wxDefaultValidator, _T("ID_BUTTON2"));
+    BoxSizer2->Add(Button2, 0, wxALL|wxALIGN_LEFT, 5);
     Panel3->SetSizer(BoxSizer2);
     BoxSizer2->Fit(Panel3);
     BoxSizer2->SetSizeHints(Panel3);
@@ -123,6 +127,7 @@ DemoGraphFrame::DemoGraphFrame(wxWindow* parent,wxWindowID id)
     Connect(ID_CHECKBOX7,wxEVT_COMMAND_CHECKBOX_CLICKED,(wxObjectEventFunction)&DemoGraphFrame::OnChangeStep);
     Connect(ID_CHECKBOX8,wxEVT_COMMAND_CHECKBOX_CLICKED,(wxObjectEventFunction)&DemoGraphFrame::OnShowLegend);
     Connect(ID_BUTTON1,wxEVT_COMMAND_BUTTON_CLICKED,(wxObjectEventFunction)&DemoGraphFrame::OnResetBorder);
+    Connect(ID_BUTTON2,wxEVT_COMMAND_BUTTON_CLICKED,(wxObjectEventFunction)&DemoGraphFrame::OnSaveScreen);
     Connect(idMenuQuit,wxEVT_COMMAND_MENU_SELECTED,(wxObjectEventFunction)&DemoGraphFrame::OnQuit);
     Connect(idMenuAbout,wxEVT_COMMAND_MENU_SELECTED,(wxObjectEventFunction)&DemoGraphFrame::OnAbout);
     //*)
@@ -232,4 +237,79 @@ void DemoGraphFrame::OnChangeStep(wxCommandEvent& event)
 void DemoGraphFrame::OnShowLegend(wxCommandEvent& event)
 {
     Panel2->GetLegend()->SetVisible(CheckBox8->GetValue());
+}
+
+/** Save screen to image */
+void DemoGraphFrame::OnSaveScreen(wxCommandEvent& event)
+{
+    wxFileDialog *dlg = new wxFileDialog
+                                (this, ("Save screen"),
+                                 wxGetCwd(),
+                                 wxEmptyString,
+                                 wxT("PNG images (*.png)|*.png"),
+                                 wxFD_SAVE,
+                                 wxDefaultPosition,
+                                 wxDefaultSize,
+                                 wxT("Save screen"));
+
+    if (dlg->ShowModal()==wxID_CANCEL)
+    {
+        delete dlg;
+        return;
+    }
+
+    wxString path_to_save = dlg->GetPath();
+    wxString file_name = dlg->GetFilename();
+    wxString chosen_directory = dlg->GetDirectory();  // set down
+
+    if (wxFileExists(path_to_save))
+    {
+        bool dlgResult = AskUserDialogue("File exists! \nDo you want to overwrite current file?",
+                                    "File rewrite");
+        if (!dlgResult)
+        {
+            delete dlg;
+            return;
+        }
+    }
+    delete dlg;
+
+    if ((path_to_save==wxEmptyString) && (file_name==wxEmptyString))
+        return;
+
+    Panel2->SavePicture(path_to_save, wxBITMAP_TYPE_PNG, true);
+}
+
+// Returns:
+// @true - if OK has been pressed
+// @false - if NO has been pressed
+bool DemoGraphFrame::AskUserDialogue(const wxString &question, const wxString &header)
+{
+    int dlg_result;
+
+    wxMessageDialog *msg = new wxMessageDialog
+                            (this,
+                             question,
+                             header,
+                             wxYES_NO|wxCENTRE,
+                             wxDefaultPosition);
+
+    dlg_result = msg->ShowModal();
+    switch(dlg_result)
+    {
+        case wxID_YES:
+        {
+            delete msg;
+            return true;
+            break;
+        }
+        case wxID_NO:
+        {
+            delete msg;
+            return false;
+            break;
+        }
+    }
+    delete msg;
+    return false;   // if something is wrong
 }

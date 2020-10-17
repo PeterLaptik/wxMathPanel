@@ -46,6 +46,7 @@ class DemoBehaviorFrame: public wxFrame
         void OnSetFramed(wxCommandEvent& event);
         void OnMouseMove(wxMouseEvent& event);
         void OnPanel2MouseMove(wxMouseEvent& event);
+        void OnSavePicture(wxCommandEvent& event);
         //*)
 
         //(*Identifiers(DemoBehaviorFrame)
@@ -63,6 +64,7 @@ class DemoBehaviorFrame: public wxFrame
         static const long ID_CHECKBOX11;
         static const long ID_CHECKBOX12;
         static const long ID_BUTTON1;
+        static const long ID_BUTTON2;
         static const long ID_PANEL3;
         static const long ID_PANEL1;
         static const long idMenuQuit;
@@ -72,6 +74,7 @@ class DemoBehaviorFrame: public wxFrame
 
         //(*Declarations(DemoBehaviorFrame)
         wxButton* Button1;
+        wxButton* Button2;
         wxCheckBox* CheckBox10;
         wxCheckBox* CheckBox11;
         wxCheckBox* CheckBox12;
@@ -92,6 +95,7 @@ class DemoBehaviorFrame: public wxFrame
 
         /** Catching mouse move event for the math panel */
         void OnCustomEvent(MouseMoveEvent &event);
+        bool AskUserDialogue(const wxString &question, const wxString &header);
 
         DECLARE_EVENT_TABLE()
 };

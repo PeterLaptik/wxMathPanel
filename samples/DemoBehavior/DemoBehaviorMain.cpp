@@ -6,6 +6,7 @@
 
 #include "DemoBehaviorMain.h"
 #include <wx/msgdlg.h>
+#include <wx/filedlg.h>
 
 //(*InternalHeaders(DemoBehaviorFrame)
 #include <wx/intl.h>
@@ -27,6 +28,7 @@ const long DemoBehaviorFrame::ID_CHECKBOX10 = wxNewId();
 const long DemoBehaviorFrame::ID_CHECKBOX11 = wxNewId();
 const long DemoBehaviorFrame::ID_CHECKBOX12 = wxNewId();
 const long DemoBehaviorFrame::ID_BUTTON1 = wxNewId();
+const long DemoBehaviorFrame::ID_BUTTON2 = wxNewId();
 const long DemoBehaviorFrame::ID_PANEL3 = wxNewId();
 const long DemoBehaviorFrame::ID_PANEL1 = wxNewId();
 const long DemoBehaviorFrame::idMenuQuit = wxNewId();
@@ -51,7 +53,7 @@ DemoBehaviorFrame::DemoBehaviorFrame(wxWindow* parent,wxWindowID id)
     wxMenuItem* MenuItem2;
 
     Create(parent, id, _("MathPanel sample"), wxDefaultPosition, wxDefaultSize, wxDEFAULT_FRAME_STYLE, _T("id"));
-    SetClientSize(wxSize(640,480));
+    SetClientSize(wxSize(640,520));
     Panel1 = new wxPanel(this, ID_PANEL1, wxPoint(288,360), wxDefaultSize, wxTAB_TRAVERSAL, _T("ID_PANEL1"));
     BoxSizer1 = new wxBoxSizer(wxHORIZONTAL);
     Panel2 = new wxMathPanel(Panel1, ID_PANEL2, wxDefaultPosition, wxDefaultSize, wxBORDER_SIMPLE|wxTAB_TRAVERSAL, _T("ID_PANEL2"));
@@ -96,6 +98,8 @@ DemoBehaviorFrame::DemoBehaviorFrame(wxWindow* parent,wxWindowID id)
     BoxSizer2->Add(CheckBox12, 1, wxALL|wxALIGN_LEFT, 5);
     Button1 = new wxButton(Panel3, ID_BUTTON1, _("Reset"), wxDefaultPosition, wxDefaultSize, 0, wxDefaultValidator, _T("ID_BUTTON1"));
     BoxSizer2->Add(Button1, 1, wxALL|wxALIGN_LEFT, 5);
+    Button2 = new wxButton(Panel3, ID_BUTTON2, _("Save screen"), wxDefaultPosition, wxDefaultSize, 0, wxDefaultValidator, _T("ID_BUTTON2"));
+    BoxSizer2->Add(Button2, 1, wxALL|wxALIGN_LEFT, 5);
     Panel3->SetSizer(BoxSizer2);
     BoxSizer2->Fit(Panel3);
     BoxSizer2->SetSizeHints(Panel3);
@@ -133,6 +137,7 @@ DemoBehaviorFrame::DemoBehaviorFrame(wxWindow* parent,wxWindowID id)
     Connect(ID_CHECKBOX11,wxEVT_COMMAND_CHECKBOX_CLICKED,(wxObjectEventFunction)&DemoBehaviorFrame::OnChangeAxisName);
     Connect(ID_CHECKBOX12,wxEVT_COMMAND_CHECKBOX_CLICKED,(wxObjectEventFunction)&DemoBehaviorFrame::OnAddRestraints);
     Connect(ID_BUTTON1,wxEVT_COMMAND_BUTTON_CLICKED,(wxObjectEventFunction)&DemoBehaviorFrame::OnResetBorders);
+    Connect(ID_BUTTON2,wxEVT_COMMAND_BUTTON_CLICKED,(wxObjectEventFunction)&DemoBehaviorFrame::OnSavePicture);
     Connect(idMenuQuit,wxEVT_COMMAND_MENU_SELECTED,(wxObjectEventFunction)&DemoBehaviorFrame::OnQuit);
     Connect(idMenuAbout,wxEVT_COMMAND_MENU_SELECTED,(wxObjectEventFunction)&DemoBehaviorFrame::OnAbout);
     //*)
@@ -294,4 +299,79 @@ void DemoBehaviorFrame::OnCustomEvent(MouseMoveEvent &event)
     wxString val;
     val<<"x="<<round(event.X*10)/10<<"\ty="<<round(event.Y*10)/10;
     StatusBar1->SetLabelText(val);
+}
+
+/** Save picture */
+void DemoBehaviorFrame::OnSavePicture(wxCommandEvent& event)
+{
+    wxFileDialog *dlg = new wxFileDialog
+                                (this, ("Save screen"),
+                                 wxGetCwd(),
+                                 wxEmptyString,
+                                 wxT("PNG images (*.png)|*.png"),
+                                 wxFD_SAVE,
+                                 wxDefaultPosition,
+                                 wxDefaultSize,
+                                 wxT("Save screen"));
+
+    if (dlg->ShowModal()==wxID_CANCEL)
+    {
+        delete dlg;
+        return;
+    }
+
+    wxString path_to_save = dlg->GetPath();
+    wxString file_name = dlg->GetFilename();
+    wxString chosen_directory = dlg->GetDirectory();  // set down
+
+    if (wxFileExists(path_to_save))
+    {
+        bool dlgResult = AskUserDialogue("File exists! \nDo you want to overwrite current file?",
+                                    "File rewrite");
+        if (!dlgResult)
+        {
+            delete dlg;
+            return;
+        }
+    }
+    delete dlg;
+
+    if ((path_to_save==wxEmptyString) && (file_name==wxEmptyString))
+        return;
+
+    Panel2->SavePicture(path_to_save, wxBITMAP_TYPE_PNG, true);
+}
+
+// Returns:
+// @true - if OK has been pressed
+// @false - if NO has been pressed
+bool DemoBehaviorFrame::AskUserDialogue(const wxString &question, const wxString &header)
+{
+    int dlg_result;
+
+    wxMessageDialog *msg = new wxMessageDialog
+                            (this,
+                             question,
+                             header,
+                             wxYES_NO|wxCENTRE,
+                             wxDefaultPosition);
+
+    dlg_result = msg->ShowModal();
+    switch(dlg_result)
+    {
+        case wxID_YES:
+        {
+            delete msg;
+            return true;
+            break;
+        }
+        case wxID_NO:
+        {
+            delete msg;
+            return false;
+            break;
+        }
+    }
+    delete msg;
+    return false;   // if something is wrong
 }

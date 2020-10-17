@@ -10,6 +10,7 @@
 #include "Pointset3.h"
 #include "Pointset4.h"
 #include <wx/msgdlg.h>
+#include <wx/filedlg.h>
 
 //(*InternalHeaders(DemoInterpolationFrame)
 #include <wx/intl.h>
@@ -30,6 +31,7 @@ const long DemoInterpolationFrame::ID_CHECKBOX2 = wxNewId();
 const long DemoInterpolationFrame::ID_CHECKBOX3 = wxNewId();
 const long DemoInterpolationFrame::ID_CHECKBOX6 = wxNewId();
 const long DemoInterpolationFrame::ID_BUTTON1 = wxNewId();
+const long DemoInterpolationFrame::ID_BUTTON2 = wxNewId();
 const long DemoInterpolationFrame::ID_PANEL1 = wxNewId();
 const long DemoInterpolationFrame::idMenuQuit = wxNewId();
 const long DemoInterpolationFrame::idMenuAbout = wxNewId();
@@ -78,7 +80,9 @@ DemoInterpolationFrame::DemoInterpolationFrame(wxWindow* parent,wxWindowID id)
     CheckBox6->SetValue(false);
     BoxSizer3->Add(CheckBox6, 1, wxALL|wxALIGN_LEFT, 5);
     Button1 = new wxButton(Panel1, ID_BUTTON1, _("Reset"), wxDefaultPosition, wxDefaultSize, 0, wxDefaultValidator, _T("ID_BUTTON1"));
-    BoxSizer3->Add(Button1, 1, wxALL|wxALIGN_CENTER_HORIZONTAL|wxALIGN_CENTER_VERTICAL, 5);
+    BoxSizer3->Add(Button1, 1, wxALL|wxALIGN_LEFT, 5);
+    Button2 = new wxButton(Panel1, ID_BUTTON2, _("Save picture"), wxDefaultPosition, wxDefaultSize, 0, wxDefaultValidator, _T("ID_BUTTON2"));
+    BoxSizer3->Add(Button2, 1, wxALL|wxALIGN_LEFT, 5);
     BoxSizer1->Add(BoxSizer3, 0, wxALIGN_LEFT, 0);
     Panel1->SetSizer(BoxSizer1);
     BoxSizer1->Fit(Panel1);
@@ -108,6 +112,7 @@ DemoInterpolationFrame::DemoInterpolationFrame(wxWindow* parent,wxWindowID id)
     Connect(ID_CHECKBOX3,wxEVT_COMMAND_CHECKBOX_CLICKED,(wxObjectEventFunction)&DemoInterpolationFrame::OnSetHighQuality);
     Connect(ID_CHECKBOX6,wxEVT_COMMAND_CHECKBOX_CLICKED,(wxObjectEventFunction)&DemoInterpolationFrame::OnLessCurves);
     Connect(ID_BUTTON1,wxEVT_COMMAND_BUTTON_CLICKED,(wxObjectEventFunction)&DemoInterpolationFrame::OnResetScale);
+    Connect(ID_BUTTON2,wxEVT_COMMAND_BUTTON_CLICKED,(wxObjectEventFunction)&DemoInterpolationFrame::OnSavePicture);
     Connect(idMenuQuit,wxEVT_COMMAND_MENU_SELECTED,(wxObjectEventFunction)&DemoInterpolationFrame::OnQuit);
     Connect(idMenuAbout,wxEVT_COMMAND_MENU_SELECTED,(wxObjectEventFunction)&DemoInterpolationFrame::OnAbout);
     //*)
@@ -195,4 +200,78 @@ void DemoInterpolationFrame::OnCustomEvent(MouseMoveEvent &event)
     wxString val;
     val<<"x="<<round(event.X*10)/10<<"\ty="<<round(event.Y*10)/10;
     StatusBar1->SetLabelText(val);
+}
+
+void DemoInterpolationFrame::OnSavePicture(wxCommandEvent& event)
+{
+    wxFileDialog *dlg = new wxFileDialog
+                                (this, ("Save screen"),
+                                 wxGetCwd(),
+                                 wxEmptyString,
+                                 wxT("PNG images (*.png)|*.png"),
+                                 wxFD_SAVE,
+                                 wxDefaultPosition,
+                                 wxDefaultSize,
+                                 wxT("Save screen"));
+
+    if (dlg->ShowModal()==wxID_CANCEL)
+    {
+        delete dlg;
+        return;
+    }
+
+    wxString path_to_save = dlg->GetPath();
+    wxString file_name = dlg->GetFilename();
+    wxString chosen_directory = dlg->GetDirectory();  // set down
+
+    if (wxFileExists(path_to_save))
+    {
+        bool dlgResult = AskUserDialogue("File exists! \nDo you want to overwrite current file?",
+                                    "File rewrite");
+        if (!dlgResult)
+        {
+            delete dlg;
+            return;
+        }
+    }
+    delete dlg;
+
+    if ((path_to_save==wxEmptyString) && (file_name==wxEmptyString))
+        return;
+
+    Panel2->SavePicture(path_to_save, wxBITMAP_TYPE_PNG, true);
+}
+
+// Returns:
+// @true - if OK has been pressed
+// @false - if NO has been pressed
+bool DemoInterpolationFrame::AskUserDialogue(const wxString &question, const wxString &header)
+{
+    int dlg_result;
+
+    wxMessageDialog *msg = new wxMessageDialog
+                            (this,
+                             question,
+                             header,
+                             wxYES_NO|wxCENTRE,
+                             wxDefaultPosition);
+
+    dlg_result = msg->ShowModal();
+    switch(dlg_result)
+    {
+        case wxID_YES:
+        {
+            delete msg;
+            return true;
+            break;
+        }
+        case wxID_NO:
+        {
+            delete msg;
+            return false;
+            break;
+        }
+    }
+    delete msg;
+    return false;   // if something is wrong
 }
