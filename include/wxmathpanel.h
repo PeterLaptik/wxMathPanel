@@ -56,6 +56,9 @@ class wxMathPanel: public wxPanel
         void GetNetLinesVisibility(bool &show_x, bool &show_y) const;
         void GetMiddleLinesVisibility(bool &show_x, bool &show_y) const;
 
+        ///\name Output
+        void SavePicture(const wxString &output_path, wxBitmapType picture_type = wxBITMAP_TYPE_PNG, bool rewrite_if_exists = false);
+
         ///\name Numeric values
         void SetBaseNumber(int base_number);    // for both axises
         void SetBaseNumber(int x_base_number, int y_base_number);
@@ -110,6 +113,9 @@ class wxMathPanel: public wxPanel
         void DrawNetworkVertical(wxDC &dc);
         void DrawNetworkLogVertical(wxDC &dc);
         void CheckBorders(wxDC &dc);
+
+        // Output
+        void DrawOnMemoryDC(void);
 
         // Frame size
         void AssignFrames(wxDC &dc, double start, double step);
@@ -185,6 +191,12 @@ class wxMathPanel: public wxPanel
         // Makes able to return correct left/bottom border values if switched to the linear scale from the logarithmic one
         double m_was_resized_x, m_was_resized_y;    // resets last state after resize
         double m_last_left_border, m_last_bottom_border, m_last_right_border, m_last_top_border;    // last states
+
+        // Output picture variables
+        bool m_output_screen;
+        bool m_rewrite_image;
+        wxBitmapType m_bitmap_type;
+        wxString m_output_path;
 };
 
 #endif // WXMATHPANEL_H

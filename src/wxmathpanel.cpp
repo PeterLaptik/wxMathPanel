@@ -150,6 +150,7 @@ wxMathPanel::wxMathPanel(wxWindow *parent,
     #ifdef MATH_PANEL_TURN_ON_DOUBLE_BUFFERING
         this->SetBackgroundStyle(wxBG_STYLE_PAINT);
     #endif // MATH_PANEL_TURN_ON_DOUBLE_BUFFERING
+    m_output_screen = false;
     this->Refresh();
 }
 
@@ -288,6 +289,13 @@ void wxMathPanel::EventPaint(wxPaintEvent &event)
         wxPaintDC dc(this);
     #endif // MATH_PANEL_TURN_ON_DOUBLE_BUFFERING
 
+    // Draw in memory and save picture if nesessary
+    if(m_output_screen)
+    {
+        m_output_screen = false;
+        DrawOnMemoryDC();
+    }
+
     dc.SetTextForeground(m_colour_label);
 
     if(m_width<MATH_MIN_ACTUAL_SIZE || m_height<MATH_MIN_ACTUAL_SIZE)
@@ -310,6 +318,50 @@ void wxMathPanel::EventPaint(wxPaintEvent &event)
 
     // Draw additions - mock for subclasses
     DrawAfter(dc);
+}
+
+// Draw on memory context and output to picture file
+void wxMathPanel::DrawOnMemoryDC()
+{
+    wxBufferedPaintDC dc_mem(this);
+    wxBitmap bitmap(this->GetSize().x, this->GetSize().y);
+    dc_mem.SelectObject(bitmap);
+
+    dc_mem.Clear();
+    dc_mem.SetTextForeground(m_colour_label);
+
+    if(m_width<MATH_MIN_ACTUAL_SIZE || m_height<MATH_MIN_ACTUAL_SIZE)
+        return;
+
+    CheckBorders(dc_mem);
+    if(!m_is_y_logarithmic)
+        DrawNetworkHorizontal(dc_mem);
+    else
+        DrawNetworkLogHorizontal(dc_mem);
+
+    if(!m_is_x_logarithmic)
+        DrawNetworkVertical(dc_mem);
+    else
+        DrawNetworkLogVertical(dc_mem);
+
+    DrawAxises(dc_mem);
+    DrawAfter(dc_mem);
+    if((m_rewrite_image)||(!wxFileExists(m_output_path)))
+        bitmap.SaveFile(m_output_path, m_bitmap_type);
+}
+
+/**\brief Save screen as a picture.
+* \param output_path Path to output picture.
+* \param picture_type Picture type, i.e. wxBitmapType value.
+* \param rewrite_if_exists Rewrite image file if exists.
+*/
+void wxMathPanel::SavePicture(const wxString &output_path, wxBitmapType picture_type, bool rewrite_if_exists)
+{
+    m_output_screen = true;
+    m_rewrite_image = rewrite_if_exists;
+    m_bitmap_type = picture_type;
+    m_output_path = output_path;
+    this->Refresh();
 }
 
 // Check borders values to avoid errors
