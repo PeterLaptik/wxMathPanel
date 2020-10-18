@@ -1,3 +1,12 @@
+/*********************************************************************
+ * Name:      ifunction.h
+ * Purpose:
+ * Author:    Peter Laptik
+ * Created:   2020-10-18
+ * Copyright: (c) Peter Laptik
+ * Licence:   wxWindows licence
+ ********************************************************************/
+
 #ifndef IFUNCTION_H_INCLUDED
 #define IFUNCTION_H_INCLUDED
 

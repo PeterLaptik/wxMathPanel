@@ -1,3 +1,12 @@
+/*********************************************************************
+ * Name:      wxmathpanelpointgraph.h
+ * Purpose:   Panel class for interpolated functions plotting by points.
+ * Author:    Peter Laptik
+ * Created:   2020-10-18
+ * Copyright: (c) Peter Laptik
+ * Licence:   wxWindows licence
+ ********************************************************************/
+
 #ifndef WXMATHPANELPOINTGRAPH_H
 #define WXMATHPANELPOINTGRAPH_H
 
@@ -11,6 +20,10 @@
 static const int MAX_CURVES = 10;
 
 
+/**\brief Class for plotting interpolated curves by points.
+*
+* Curves to be drawn have to implement the interface IPointSet.
+*/
 class wxMathPanelPointGraph : public wxMathPanel
 {
     public:

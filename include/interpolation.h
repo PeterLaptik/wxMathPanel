@@ -1,11 +1,20 @@
+/*********************************************************************
+ * Name:      interpolation.h
+ * Purpose:
+ * Author:    Peter Laptik
+ * Created:   2020-10-18
+ * Copyright: (c) Peter Laptik
+ * Licence:   wxWindows licence
+ ********************************************************************/
+
 #ifndef INTERPOLATION_H_INCLUDED
 #define INTERPOLATION_H_INCLUDED
 
 #include "stddef.h"
 
-////////////////////////////////////////////////////////////////////
-// Classes to implement polynomial interpolation in Lagrange form //
-////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////
+// Classes to implement polynomial interpolation in the Lagrange form //
+////////////////////////////////////////////////////////////////////////
 
 // Maximum points for polynom
 static const int MAX_POINTS = 20;

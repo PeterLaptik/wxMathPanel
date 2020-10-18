@@ -1,3 +1,12 @@
+/*********************************************************************
+ * Name:      pointlabel.h
+ * Purpose:
+ * Author:    Peter Laptik
+ * Created:   2020-10-18
+ * Copyright: (c) Peter Laptik
+ * Licence:   wxWindows licence
+ ********************************************************************/
+
 #ifndef POINTLABEL_H_INCLUDED
 #define POINTLABEL_H_INCLUDED
 

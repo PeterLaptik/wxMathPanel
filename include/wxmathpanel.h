@@ -1,3 +1,12 @@
+/*********************************************************************
+ * Name:      wxmathpanel.h
+ * Purpose:   Base Panel class for functions plotting.
+ * Author:    Peter Laptik
+ * Created:   2020-10-18
+ * Copyright: (c) Peter Laptik
+ * Licence:   wxWindows licence
+ ********************************************************************/
+
 #ifndef WXMATHPANEL_H
 #define WXMATHPANEL_H
 
@@ -5,7 +14,6 @@
 #include <wx/panel.h>
 #include <wx/dcclient.h>
 #include <math.h>
-
 
 /**\brief Base class for the math panel witch implements main behavior settings.
 *

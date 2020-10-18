@@ -1,10 +1,18 @@
+/*********************************************************************
+ * Name:      wxmathpanelgraph.h
+ * Purpose:   Panel class for functions plotting by equation.
+ * Author:    Peter Laptik
+ * Created:   2020-10-18
+ * Copyright: (c) Peter Laptik
+ * Licence:   wxWindows licence
+ ********************************************************************/
+
 #ifndef WXMATHPANELGRAPH_H
 #define WXMATHPANELGRAPH_H
 
 #include "wxmathpanel.h"
 #include "mathlegend.h"
 #include "ifunction.h"
-
 
 /**\brief Class for drawing curves by equations.
 *

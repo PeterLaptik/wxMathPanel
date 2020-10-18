@@ -1,3 +1,12 @@
+/*********************************************************************
+ * Name:      mouseevent.h
+ * Purpose:
+ * Author:    Peter Laptik
+ * Created:   2020-10-18
+ * Copyright: (c) Peter Laptik
+ * Licence:   wxWindows licence
+ ********************************************************************/
+
 #ifndef MOUSEEVENT_H_INCLUDED
 #define MOUSEEVENT_H_INCLUDED
 

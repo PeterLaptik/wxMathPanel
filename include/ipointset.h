@@ -1,3 +1,12 @@
+/*********************************************************************
+ * Name:      ipointset.h
+ * Purpose:
+ * Author:    Peter Laptik
+ * Created:   2020-10-18
+ * Copyright: (c) Peter Laptik
+ * Licence:   wxWindows licence
+ ********************************************************************/
+
 #ifndef IPOINTSET_H_INCLUDED
 #define IPOINTSET_H_INCLUDED
 
