@@ -1,0 +1,119 @@
+prefix = @prefix@
+includeinstall = $(prefix)/include/wxmathpanel
+libinstalldir = $(prefix)/lib
+PACKAGE_VERSION = @PACKAGE_VERSION@
+
+CFLAGS = @CFLAGS@ -I./include
+CPPFLAGS = @CPPFLAGS@
+CXXFLAGS = @CXXFLAGS@
+LIBS = @LIBS@
+
+WX_VERSION = @WX_VERSION@
+WX_CONFIG_PATH = @WX_CONFIG_PATH@
+
+BUILD_DIR = ./Build
+BUILD_DIR_OBJ = $(BUILD_DIR)/obj
+BUILD_DIR_LIB = $(BUILD_DIR)/lib
+BUILD_DIR_INCLUDE = $(BUILD_DIR)/include/wxmathpanel
+BUILD_DIR_PORT = $(BUILD_DIR)/freebsd-port
+BUILD_DIR_SAMPLES = $(BUILD_DIR)/samples
+
+SRC_DIR = ./src
+INCLUDE_DIR = ./include
+SAMPLES_DIR = ./samples
+
+OUT_LIB_NAME = wx_mathpanel-$(PACKAGE_VERSION)
+OUT_FILE_NAME = lib$(OUT_LIB_NAME).so
+
+OBJS = $(BUILD_DIR_OBJ)/wxmathpanel.o  \
+	$(BUILD_DIR_OBJ)/wxmathpanelgraph.o \
+	$(BUILD_DIR_OBJ)/wxmathpanelpointgraph.o \
+	$(BUILD_DIR_OBJ)/mathlegend.o \
+	$(BUILD_DIR_OBJ)/interpolation.o
+	
+INCLUDES = $(INCLUDE_DIR)/ifunction.h \
+	$(INCLUDE_DIR)/mathlegend.h \
+	$(INCLUDE_DIR)/wxmathpanel.h \
+	$(INCLUDE_DIR)/interpolation.h \
+	$(INCLUDE_DIR)/mouseevent.h \
+	$(INCLUDE_DIR)/wxmathpanelgraph.h \
+	$(INCLUDE_DIR)/ipointset.h \
+	$(INCLUDE_DIR)/pointlabel.h \
+	$(INCLUDE_DIR)/wxmathpanelpointgraph.h
+	
+all: prepare $(OBJS) includes
+	$(CC) -shared -o $(BUILD_DIR_LIB)/$(OUT_FILE_NAME) $(OBJS) $(LIBS)
+
+$(BUILD_DIR_OBJ)/wxmathpanel.o: $(SRC_DIR)/wxmathpanel.cpp
+	$(CC) -c $(SRC_DIR)/wxmathpanel.cpp $(CPPFLAGS) $(CFLAGS) -o $(BUILD_DIR_OBJ)/wxmathpanel.o
+	
+$(BUILD_DIR_OBJ)/wxmathpanelgraph.o: $(SRC_DIR)/wxmathpanelgraph.cpp
+	$(CC) -c $(SRC_DIR)/wxmathpanelgraph.cpp $(CPPFLAGS) $(CFLAGS) -o $(BUILD_DIR_OBJ)/wxmathpanelgraph.o
+	
+$(BUILD_DIR_OBJ)/wxmathpanelpointgraph.o: $(SRC_DIR)/wxmathpanelpointgraph.cpp
+	$(CC) -c $(SRC_DIR)/wxmathpanelpointgraph.cpp $(CPPFLAGS) $(CFLAGS) -o $(BUILD_DIR_OBJ)/wxmathpanelpointgraph.o
+	
+$(BUILD_DIR_OBJ)/mathlegend.o: $(SRC_DIR)/mathlegend.cpp
+	$(CC) -c $(SRC_DIR)/mathlegend.cpp $(CPPFLAGS) $(CFLAGS) -o $(BUILD_DIR_OBJ)/mathlegend.o
+	
+$(BUILD_DIR_OBJ)/interpolation.o: src/interpolation.cpp
+	$(CC) $(CFLAGS) -c $(SRC_DIR)/interpolation.cpp -o $(BUILD_DIR_OBJ)/interpolation.o
+	
+includes: $(INCLUDES)
+	cp $(INCLUDE_DIR)/* $(BUILD_DIR_INCLUDE)
+	
+prepare:
+	echo Package version: $(PACKAGE_VERSION)
+	mkdir -p $(BUILD_DIR)
+	mkdir -p $(BUILD_DIR_OBJ)
+	mkdir -p $(BUILD_DIR_LIB)
+	mkdir -p $(BUILD_DIR_INCLUDE)
+	mkdir -p $(BUILD_DIR_PORT)
+	mkdir -p $(BUILD_DIR_SAMPLES)
+	
+clean:
+	rm -f -r $(BUILD_DIR)
+	
+install:
+	echo $(STAGEDIR)
+	mkdir -p $(includeinstall)
+	cp $(INCLUDE_DIR)/*.h $(includeinstall) 
+	cp $(BUILD_DIR_LIB)/$(OUT_FILE_NAME) $(libinstalldir)/$(OUT_FILE_NAME)
+	
+uninstall:
+	rm -r $(includeinstall)
+	rm $(libinstalldir)/$(OUT_FILE_NAME)
+
+src_arch: prepare
+	./builds/freebsd-port/create_arch.sh $(PACKAGE_VERSION)
+	
+port_arch: all
+	./builds/freebsd-port/create_port.sh $(PACKAGE_VERSION)
+
+# Demo and samples
+samples: prepare DemoBase DemoGraph DemoInterpolation DemoLegend
+
+SAMPLES_CFLAGS = -O2 -I./include
+DEMO_SAMPLES_DIR = samples
+
+DemoBase: $(DEMO_SAMPLES_DIR)/DemoBehavior/DemoBehaviorApp.cpp $(DEMO_SAMPLES_DIR)/DemoBehavior/DemoBehaviorMain.cpp
+	$(CC) -o $(BUILD_DIR_SAMPLES)/DemoBase \
+	$(DEMO_SAMPLES_DIR)/DemoBehavior/DemoBehaviorApp.cpp $(DEMO_SAMPLES_DIR)/DemoBehavior/DemoBehaviorMain.cpp \
+	$(SAMPLES_CFLAGS) $(CPPFLAGS) $(LIBS) -l$(OUT_LIB_NAME) -lstdc++ -lm
+
+DemoGraph: $(DEMO_SAMPLES_DIR)/DemoGraph/DemoGraphApp.cpp $(DEMO_SAMPLES_DIR)/DemoGraph/DemoGraphMain.cpp
+	$(CC) -o $(BUILD_DIR_SAMPLES)/DemoGraph \
+	$(DEMO_SAMPLES_DIR)/DemoGraph/DemoGraphApp.cpp $(DEMO_SAMPLES_DIR)/DemoGraph/DemoGraphMain.cpp \
+	$(SAMPLES_CFLAGS) $(CPPFLAGS) $(LIBS) -l$(OUT_LIB_NAME) -lstdc++ -lm
+	
+DemoInterpolation: $(DEMO_SAMPLES_DIR)/DemoInterpolation/DemoInterpolationApp.cpp $(DEMO_SAMPLES_DIR)/DemoInterpolation/DemoInterpolationMain.cpp
+	$(CC) -o $(BUILD_DIR_SAMPLES)/DemoInterpolation \
+	$(DEMO_SAMPLES_DIR)/DemoInterpolation/DemoInterpolationApp.cpp $(DEMO_SAMPLES_DIR)/DemoInterpolation/DemoInterpolationMain.cpp \
+	$(SAMPLES_CFLAGS) $(CPPFLAGS) $(LIBS) -l$(OUT_LIB_NAME) -lstdc++ -lm
+	
+DemoLegend: $(DEMO_SAMPLES_DIR)/DemoLegend/DemoLegendApp.cpp $(DEMO_SAMPLES_DIR)/DemoLegend/DemoLegendMain.cpp
+	$(CC) -o $(BUILD_DIR_SAMPLES)/DemoLegend \
+	$(DEMO_SAMPLES_DIR)/DemoLegend/DemoLegendApp.cpp $(DEMO_SAMPLES_DIR)/DemoLegend/DemoLegendMain.cpp \
+	$(SAMPLES_CFLAGS) $(CPPFLAGS) $(LIBS) -l$(OUT_LIB_NAME) -lstdc++ -lm
+
+.PHONY: all samples includes clean install uninstall port_arch src_arch

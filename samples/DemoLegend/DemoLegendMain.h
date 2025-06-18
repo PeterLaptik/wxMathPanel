@@ -17,7 +17,7 @@
 #include <wx/statusbr.h>
 //*)
 
-#include "../../include/wxmathpanelgraph.h"
+#include "wxmathpanelgraph.h"
 
 class DemoLegendFrame: public wxFrame
 {

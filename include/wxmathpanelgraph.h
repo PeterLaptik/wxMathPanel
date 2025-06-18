@@ -11,8 +11,10 @@
 #define WXMATHPANELGRAPH_H
 
 #include "wxmathpanel.h"
-#include "mathlegend.h"
 #include "ifunction.h"
+#include <vector>
+
+class MathLegend;
 
 /**\brief Class for drawing curves by equations.
 *

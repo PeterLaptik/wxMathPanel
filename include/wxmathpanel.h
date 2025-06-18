@@ -10,7 +10,6 @@
 #ifndef WXMATHPANEL_H
 #define WXMATHPANEL_H
 
-#include "mouseevent.h"
 #include <wx/panel.h>
 #include <wx/dcclient.h>
 #include <math.h>

@@ -1,4 +1,6 @@
-#include "../include/wxmathpanelgraph.h"
+#include "wxmathpanelgraph.h"
+#include "mathlegend.h"
+#include <wx/event.h>
 
 static const int DEFAULT_CURVE_THICKNESS = 2;
 static const int MAXIMUM_CURVE_THICKNESS = 5;

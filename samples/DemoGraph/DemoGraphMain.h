@@ -17,7 +17,8 @@
 #include <wx/statusbr.h>
 //*)
 
-#include "../../include/wxmathpanelgraph.h"
+#include "wxmathpanelgraph.h"
+#include "mouseevent.h"
 
 class DemoGraphFrame: public wxFrame
 {

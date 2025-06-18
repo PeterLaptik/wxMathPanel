@@ -1,4 +1,4 @@
-#include "../include/mathlegend.h"
+#include "mathlegend.h"
 
 // Default sizes and margins
 static const int L_DEFAULT_SIZE = 20;

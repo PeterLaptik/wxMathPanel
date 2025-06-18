@@ -9,6 +9,7 @@
 #include "Function2.h"
 #include "Function3.h"
 #include "Function4.h"
+#include "mathlegend.h"
 #include <wx/msgdlg.h>
 #include <wx/filedlg.h>
 

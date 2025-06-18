@@ -14,7 +14,8 @@
 #include "ipointset.h"
 #include "interpolation.h"
 #include "pointlabel.h"
-#include "mathlegend.h"
+
+class MathLegend;
 
 // Maximum sets that can be outputed
 static const int MAX_CURVES = 10;

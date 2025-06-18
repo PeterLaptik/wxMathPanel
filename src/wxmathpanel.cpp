@@ -1,4 +1,5 @@
-#include "../include/wxmathpanel.h"
+#include "wxmathpanel.h"
+#include "mouseevent.h"
 #include <wx/dcbuffer.h>
 
 // Comment the line below to turn off double buffering
