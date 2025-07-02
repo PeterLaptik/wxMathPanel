@@ -4,7 +4,7 @@
  * Author:    Peter Laptik
  * Created:   2020-10-18
  * Copyright: (c) Peter Laptik
- * Licence:   wxWindows licence
+ * Licence:   BSD 2-clause
  ********************************************************************/
 
 #ifndef POINTLABEL_H_INCLUDED

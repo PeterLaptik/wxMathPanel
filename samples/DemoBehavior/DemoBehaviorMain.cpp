@@ -5,6 +5,7 @@
  **************************************************************/
 
 #include "DemoBehaviorMain.h"
+#include "mouseevent.h"
 #include <wx/msgdlg.h>
 #include <wx/filedlg.h>
 
@@ -40,6 +41,8 @@ wxBEGIN_EVENT_TABLE(DemoBehaviorFrame,wxFrame)
     //(*EventTable(DemoBehaviorFrame)
     //*)
 wxEND_EVENT_TABLE()
+
+wxDEFINE_EVENT(wxMATHPANEL_MOUSE_MOVE, MouseMoveEvent);
 
 DemoBehaviorFrame::DemoBehaviorFrame(wxWindow* parent,wxWindowID id)
 {

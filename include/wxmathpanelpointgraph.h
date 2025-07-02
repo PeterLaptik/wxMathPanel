@@ -4,7 +4,7 @@
  * Author:    Peter Laptik
  * Created:   2020-10-18
  * Copyright: (c) Peter Laptik
- * Licence:   wxWindows licence
+ * Licence:   BSD 2-clause
  ********************************************************************/
 
 #ifndef WXMATHPANELPOINTGRAPH_H
@@ -14,6 +14,12 @@
 #include "ipointset.h"
 #include "interpolation.h"
 #include "pointlabel.h"
+
+#ifdef _WINDLL
+    #define DLL_EXPORT __declspec(dllexport)
+#else
+    #define DLL_EXPORT
+#endif
 
 class MathLegend;
 
@@ -25,7 +31,7 @@ static const int MAX_CURVES = 10;
 *
 * Curves to be drawn have to implement the interface IPointSet.
 */
-class wxMathPanelPointGraph : public wxMathPanel
+class DLL_EXPORT wxMathPanelPointGraph : public wxMathPanel
 {
     public:
         wxMathPanelPointGraph(wxWindow *parent,

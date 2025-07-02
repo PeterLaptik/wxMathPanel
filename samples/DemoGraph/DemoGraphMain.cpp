@@ -48,6 +48,8 @@ BEGIN_EVENT_TABLE(DemoGraphFrame,wxFrame)
     //*)
 END_EVENT_TABLE()
 
+wxDEFINE_EVENT(wxMATHPANEL_MOUSE_MOVE, MouseMoveEvent);
+
 DemoGraphFrame::DemoGraphFrame(wxWindow* parent,wxWindowID id)
 {
     //(*Initialize(DemoGraphFrame)

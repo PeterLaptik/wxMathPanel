@@ -4,7 +4,7 @@
  * Author:    Peter Laptik
  * Created:   2020-10-18
  * Copyright: (c) Peter Laptik
- * Licence:   wxWindows licence
+ * Licence:   BSD 2-clause
  ********************************************************************/
 
 #ifndef WXMATHPANELGRAPH_H
@@ -14,13 +14,19 @@
 #include "ifunction.h"
 #include <vector>
 
+#ifdef _WINDLL
+    #define DLL_EXPORT __declspec(dllexport)
+#else
+    #define DLL_EXPORT
+#endif
+
 class MathLegend;
 
 /**\brief Class for drawing curves by equations.
 *
 * Functions to be drawn have to implement the interface IDrawableFunction.
 */
-class wxMathPanelGraph : public wxMathPanel
+class DLL_EXPORT wxMathPanelGraph : public wxMathPanel
 {
     public:
         wxMathPanelGraph(wxWindow *parent,

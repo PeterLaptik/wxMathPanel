@@ -4,7 +4,7 @@
  * Author:    Peter Laptik
  * Created:   2020-10-18
  * Copyright: (c) Peter Laptik
- * Licence:   wxWindows licence
+ * Licence:   BSD 2-clause
  ********************************************************************/
 
 #ifndef MATHLEGEND_H
@@ -17,9 +17,14 @@
 #include <wx/dcclient.h>
 #include <map>
 
+#ifdef _WINDLL
+    #define DLL_EXPORT __declspec(dllexport)
+#else
+    #define DLL_EXPORT
+#endif
 
 /**\brief Simple self-drawing legend. */
-class MathLegend
+class DLL_EXPORT MathLegend
 {
     public:
         MathLegend(wxMathPanel *parent);
@@ -47,10 +52,6 @@ class MathLegend
 
         void SetShadow(bool shadow = true);
         bool HasShadow(void) const;
-
-
-    protected:
-
 
     private:
         // Scaling computing

@@ -1,13 +1,8 @@
 prefix = @prefix@
 includeinstall = $(prefix)/include/wxmathpanel
 libinstalldir = $(prefix)/lib
+
 PACKAGE_VERSION = @PACKAGE_VERSION@
-
-CFLAGS = @CFLAGS@ -I./include
-CPPFLAGS = @CPPFLAGS@
-CXXFLAGS = @CXXFLAGS@
-LIBS = @LIBS@
-
 WX_VERSION = @WX_VERSION@
 WX_CONFIG_PATH = @WX_CONFIG_PATH@
 
@@ -18,12 +13,12 @@ BUILD_DIR_INCLUDE = $(BUILD_DIR)/include/wxmathpanel
 BUILD_DIR_PORT = $(BUILD_DIR)/freebsd-port
 BUILD_DIR_SAMPLES = $(BUILD_DIR)/samples
 
+OUT_LIB_NAME = wx_mathpanel-$(PACKAGE_VERSION)
+OUT_FILE_NAME = lib$(OUT_LIB_NAME).so
+
 SRC_DIR = ./src
 INCLUDE_DIR = ./include
 SAMPLES_DIR = ./samples
-
-OUT_LIB_NAME = wx_mathpanel-$(PACKAGE_VERSION)
-OUT_FILE_NAME = lib$(OUT_LIB_NAME).so
 
 OBJS = $(BUILD_DIR_OBJ)/wxmathpanel.o  \
 	$(BUILD_DIR_OBJ)/wxmathpanelgraph.o \
@@ -40,7 +35,12 @@ INCLUDES = $(INCLUDE_DIR)/ifunction.h \
 	$(INCLUDE_DIR)/ipointset.h \
 	$(INCLUDE_DIR)/pointlabel.h \
 	$(INCLUDE_DIR)/wxmathpanelpointgraph.h
-	
+
+CFLAGS = @CFLAGS@ -I$(INCLUDE_DIR)
+CPPFLAGS = @CPPFLAGS@
+CXXFLAGS = @CXXFLAGS@
+LIBS = @LIBS@
+
 all: prepare $(OBJS) includes
 	$(CC) -shared -o $(BUILD_DIR_LIB)/$(OUT_FILE_NAME) $(OBJS) $(LIBS)
 
