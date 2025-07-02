@@ -4,13 +4,19 @@
  * Author:    Peter Laptik
  * Created:   2020-10-18
  * Copyright: (c) Peter Laptik
- * Licence:   wxWindows licence
+ * Licence:   BSD 2-clause
  ********************************************************************/
 
 #ifndef MOUSEEVENT_H_INCLUDED
 #define MOUSEEVENT_H_INCLUDED
 
 #include <wx/event.h>
+
+#ifdef _WINDLL
+    #define DLL_EXPORT __declspec(dllexport)
+#else
+    #define DLL_EXPORT
+#endif
 
 class MouseMoveEvent;
 wxDECLARE_EVENT(wxMATHPANEL_MOUSE_MOVE, MouseMoveEvent);
@@ -32,7 +38,7 @@ class MouseMoveEvent: public wxCommandEvent
         {
             SetEventType(wxMATHPANEL_MOUSE_MOVE);
             this->X = event.X;
-            this->Y = event.Y;;
+            this->Y = event.Y;
         }
 
         wxEvent* Clone() const { return new MouseMoveEvent(*this); }

@@ -4,22 +4,27 @@
  * Author:    Peter Laptik
  * Created:   2020-10-18
  * Copyright: (c) Peter Laptik
- * Licence:   wxWindows licence
+ * Licence:   BSD 2-clause
  ********************************************************************/
 
 #ifndef WXMATHPANEL_H
 #define WXMATHPANEL_H
 
-#include "mouseevent.h"
 #include <wx/panel.h>
 #include <wx/dcclient.h>
 #include <math.h>
+
+#ifdef _WINDLL
+    #define DLL_EXPORT __declspec(dllexport)
+#else
+    #define DLL_EXPORT
+#endif
 
 /**\brief Base class for the math panel witch implements main behavior settings.
 *
 * Curves plotting has to be implemented in inherited classes using DrawAfter method.
 */
-class wxMathPanel: public wxPanel
+class DLL_EXPORT wxMathPanel: public wxPanel
 {
     public:
         ///\name Constructors and destructor

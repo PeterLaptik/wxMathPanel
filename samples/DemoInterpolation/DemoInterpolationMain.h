@@ -17,8 +17,8 @@
 #include <wx/statusbr.h>
 //*)
 
-#include "../../include/wxmathpanelpointgraph.h"
-#include "../../include/mouseevent.h"
+#include "wxmathpanelpointgraph.h"
+#include "mouseevent.h"
 
 class DemoInterpolationFrame: public wxFrame
 {

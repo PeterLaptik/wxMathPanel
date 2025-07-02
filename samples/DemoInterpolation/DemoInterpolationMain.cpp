@@ -43,6 +43,8 @@ BEGIN_EVENT_TABLE(DemoInterpolationFrame,wxFrame)
     //*)
 END_EVENT_TABLE()
 
+wxDEFINE_EVENT(wxMATHPANEL_MOUSE_MOVE, MouseMoveEvent);
+
 DemoInterpolationFrame::DemoInterpolationFrame(wxWindow* parent,wxWindowID id)
 {
     //(*Initialize(DemoInterpolationFrame)

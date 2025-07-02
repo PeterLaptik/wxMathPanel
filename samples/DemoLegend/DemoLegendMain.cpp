@@ -8,6 +8,7 @@
 #include "Function1.h"
 #include "Function2.h"
 #include "Function3.h"
+#include "mathlegend.h"
 #include <wx/msgdlg.h>
 
 //(*InternalHeaders(DemoLegendFrame)

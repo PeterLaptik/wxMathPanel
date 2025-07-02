@@ -9,6 +9,7 @@
 #include "Function2.h"
 #include "Function3.h"
 #include "Function4.h"
+#include "mathlegend.h"
 #include <wx/msgdlg.h>
 #include <wx/filedlg.h>
 
@@ -46,6 +47,8 @@ BEGIN_EVENT_TABLE(DemoGraphFrame,wxFrame)
     //(*EventTable(DemoGraphFrame)
     //*)
 END_EVENT_TABLE()
+
+wxDEFINE_EVENT(wxMATHPANEL_MOUSE_MOVE, MouseMoveEvent);
 
 DemoGraphFrame::DemoGraphFrame(wxWindow* parent,wxWindowID id)
 {
