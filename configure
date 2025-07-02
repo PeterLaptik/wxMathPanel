@@ -2903,7 +2903,7 @@ printf "%s\n" "no (version $WX_VERSION is not new enough)" >&6; }
 
        { { printf "%s\n" "$as_me:${as_lineno-$LINENO}: error: in '$ac_pwd':" >&5
 printf "%s\n" "$as_me: error: in '$ac_pwd':" >&2;}
-as_fn_error $? "wxWidgets 3.1.6 or later not found
+as_fn_error $? "wxWidgets 3.0.0 or later not found
 See 'config.log' for more details" "$LINENO" 5; }
 
     fi
@@ -2918,7 +2918,7 @@ See 'config.log' for more details" "$LINENO" 5; }
 
     { { printf "%s\n" "$as_me:${as_lineno-$LINENO}: error: in '$ac_pwd':" >&5
 printf "%s\n" "$as_me: error: in '$ac_pwd':" >&2;}
-as_fn_error $? "wxWidgets 3.1.6 or later not found
+as_fn_error $? "wxWidgets 3.0.0 or later not found
 See 'config.log' for more details" "$LINENO" 5; }
 
   fi

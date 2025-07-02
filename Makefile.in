@@ -87,7 +87,7 @@ uninstall:
 src_arch: prepare
 	./builds/freebsd-port/create_arch.sh $(PACKAGE_VERSION)
 	
-port_arch: all
+port: all
 	./builds/freebsd-port/create_port.sh $(PACKAGE_VERSION)
 
 # Demo and samples
