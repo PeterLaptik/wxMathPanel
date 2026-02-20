@@ -90,30 +90,58 @@ src_arch: prepare
 port: all
 	./builds/freebsd-port/create_port.sh $(PACKAGE_VERSION)
 
-# Demo and samples
-samples: prepare DemoBase DemoGraph DemoInterpolation DemoLegend
 
-SAMPLES_CFLAGS = -O2 -I./include
+
+
+# Demo and samples
+
+OBJ_SAMPLES = $(BUILD_DIR_SAMPLES)/DemoBase \
+			$(BUILD_DIR_SAMPLES)/DemoGraph \
+			$(BUILD_DIR_SAMPLES)/DemoInterpolation \
+			$(BUILD_DIR_SAMPLES)/DemoLegend
+
+samples: prepare all $(OBJ_SAMPLES) lib_samples_copy
+
+SAMPLES_CFLAGS = -O2 -I$(BUILD_DIR_INCLUDE)
 DEMO_SAMPLES_DIR = samples
 
-DemoBase: $(DEMO_SAMPLES_DIR)/DemoBehavior/DemoBehaviorApp.cpp $(DEMO_SAMPLES_DIR)/DemoBehavior/DemoBehaviorMain.cpp
+$(BUILD_DIR_SAMPLES)/DemoBase: $(DEMO_SAMPLES_DIR)/DemoBehavior/DemoBehaviorApp.cpp $(DEMO_SAMPLES_DIR)/DemoBehavior/DemoBehaviorMain.cpp
 	$(CC) -o $(BUILD_DIR_SAMPLES)/DemoBase \
 	$(DEMO_SAMPLES_DIR)/DemoBehavior/DemoBehaviorApp.cpp $(DEMO_SAMPLES_DIR)/DemoBehavior/DemoBehaviorMain.cpp \
-	$(SAMPLES_CFLAGS) $(CPPFLAGS) $(LIBS) -l$(OUT_LIB_NAME) -lstdc++ -lm
+	$(SAMPLES_CFLAGS) $(CPPFLAGS) $(LIBS) -L$(BUILD_DIR_LIB) -l$(OUT_LIB_NAME) -lstdc++ -lm
+	echo '#!/bin/sh' > $(BUILD_DIR_SAMPLES)/DemoBase.sh
+	echo 'export LD_LIBRARY_PATH=$$(dirname $$0)' >> $(BUILD_DIR_SAMPLES)/DemoBase.sh
+	echo '$$(dirname $$0)/DemoBase' >> $(BUILD_DIR_SAMPLES)/DemoBase.sh
+	chmod u+x $(BUILD_DIR_SAMPLES)/DemoBase.sh
 
-DemoGraph: $(DEMO_SAMPLES_DIR)/DemoGraph/DemoGraphApp.cpp $(DEMO_SAMPLES_DIR)/DemoGraph/DemoGraphMain.cpp
+$(BUILD_DIR_SAMPLES)/DemoGraph: $(DEMO_SAMPLES_DIR)/DemoGraph/DemoGraphApp.cpp $(DEMO_SAMPLES_DIR)/DemoGraph/DemoGraphMain.cpp
 	$(CC) -o $(BUILD_DIR_SAMPLES)/DemoGraph \
 	$(DEMO_SAMPLES_DIR)/DemoGraph/DemoGraphApp.cpp $(DEMO_SAMPLES_DIR)/DemoGraph/DemoGraphMain.cpp \
-	$(SAMPLES_CFLAGS) $(CPPFLAGS) $(LIBS) -l$(OUT_LIB_NAME) -lstdc++ -lm
+	$(SAMPLES_CFLAGS) $(CPPFLAGS) $(LIBS) -L$(BUILD_DIR_LIB) -l$(OUT_LIB_NAME) -lstdc++ -lm
+	echo '#!/bin/sh' > $(BUILD_DIR_SAMPLES)/DemoGraph.sh
+	echo 'export LD_LIBRARY_PATH=$$(dirname $$0)' >> $(BUILD_DIR_SAMPLES)/DemoGraph.sh
+	echo '$$(dirname $$0)/DemoGraph' >> $(BUILD_DIR_SAMPLES)/DemoGraph.sh
+	chmod u+x $(BUILD_DIR_SAMPLES)/DemoGraph.sh
 	
-DemoInterpolation: $(DEMO_SAMPLES_DIR)/DemoInterpolation/DemoInterpolationApp.cpp $(DEMO_SAMPLES_DIR)/DemoInterpolation/DemoInterpolationMain.cpp
+$(BUILD_DIR_SAMPLES)/DemoInterpolation: $(DEMO_SAMPLES_DIR)/DemoInterpolation/DemoInterpolationApp.cpp $(DEMO_SAMPLES_DIR)/DemoInterpolation/DemoInterpolationMain.cpp
 	$(CC) -o $(BUILD_DIR_SAMPLES)/DemoInterpolation \
 	$(DEMO_SAMPLES_DIR)/DemoInterpolation/DemoInterpolationApp.cpp $(DEMO_SAMPLES_DIR)/DemoInterpolation/DemoInterpolationMain.cpp \
-	$(SAMPLES_CFLAGS) $(CPPFLAGS) $(LIBS) -l$(OUT_LIB_NAME) -lstdc++ -lm
+	$(SAMPLES_CFLAGS) $(CPPFLAGS) $(LIBS) -L$(BUILD_DIR_LIB) -l$(OUT_LIB_NAME) -lstdc++ -lm
+	echo '#!/bin/sh' > $(BUILD_DIR_SAMPLES)/DemoInterpolation.sh
+	echo 'export LD_LIBRARY_PATH=$$(dirname $$0)' >> $(BUILD_DIR_SAMPLES)/DemoInterpolation.sh
+	echo '$$(dirname $$0)/DemoInterpolation' >> $(BUILD_DIR_SAMPLES)/DemoInterpolation.sh
+	chmod u+x $(BUILD_DIR_SAMPLES)/DemoInterpolation.sh
 	
-DemoLegend: $(DEMO_SAMPLES_DIR)/DemoLegend/DemoLegendApp.cpp $(DEMO_SAMPLES_DIR)/DemoLegend/DemoLegendMain.cpp
+$(BUILD_DIR_SAMPLES)/DemoLegend: $(DEMO_SAMPLES_DIR)/DemoLegend/DemoLegendApp.cpp $(DEMO_SAMPLES_DIR)/DemoLegend/DemoLegendMain.cpp
 	$(CC) -o $(BUILD_DIR_SAMPLES)/DemoLegend \
 	$(DEMO_SAMPLES_DIR)/DemoLegend/DemoLegendApp.cpp $(DEMO_SAMPLES_DIR)/DemoLegend/DemoLegendMain.cpp \
-	$(SAMPLES_CFLAGS) $(CPPFLAGS) $(LIBS) -l$(OUT_LIB_NAME) -lstdc++ -lm
+	$(SAMPLES_CFLAGS) $(CPPFLAGS) $(LIBS) -L$(BUILD_DIR_LIB) -l$(OUT_LIB_NAME) -lstdc++ -lm
+	echo '#!/bin/sh' > $(BUILD_DIR_SAMPLES)/DemoLegend.sh
+	echo 'export LD_LIBRARY_PATH=$$(dirname $$0)' >> $(BUILD_DIR_SAMPLES)/DemoLegend.sh
+	echo '$$(dirname $$0)/DemoLegend' >> $(BUILD_DIR_SAMPLES)/DemoLegend.sh
+	chmod u+x $(BUILD_DIR_SAMPLES)/DemoLegend.sh
 
-.PHONY: all samples includes clean install uninstall port_arch src_arch
+lib_samples_copy:
+	cp $(BUILD_DIR_LIB)/$(OUT_FILE_NAME) $(BUILD_DIR_SAMPLES)/$(OUT_FILE_NAME)
+	
+.PHONY: all samples includes clean install uninstall port_arch src_arch lib_copy
